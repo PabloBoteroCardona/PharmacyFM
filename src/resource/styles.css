@@ -1,0 +1,121 @@
+/* =============================================
+   PharmacyFM - Estilos personalizados
+   ============================================= */
+
+/* ---- Panel izquierdo del login ---- */
+.login-left-panel {
+    -fx-background-color: #1a6b4a;
+    -fx-padding: 40px;
+}
+
+.login-app-title {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.login-app-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255, 255, 255, 0.8);
+    -fx-wrap-text: true;
+}
+
+.login-app-badge {
+    -fx-font-size: 64px;
+}
+
+/* ---- Panel derecho del login ---- */
+.login-right-panel {
+    -fx-background-color: white;
+    -fx-padding: 40px 40px 50px 40px;
+}
+
+.login-form-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a2e;
+}
+
+.login-form-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #888888;
+}
+
+.login-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #444444;
+}
+
+.login-error {
+    -fx-text-fill: #e74c3c;
+    -fx-font-size: 12px;
+}
+
+/* ---- Botón principal ---- */
+.btn-primary {
+    -fx-background-color: #1a6b4a;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10px 20px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #145c3e;
+}
+
+/* ---- Botón secundario ---- */
+.btn-secondary {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1a6b4a;
+    -fx-font-size: 13px;
+    -fx-padding: 10px 20px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-border-color: #1a6b4a;
+    -fx-border-radius: 6px;
+    -fx-border-width: 1px;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #f0faf5;
+}
+
+/* ---- Barra superior de ventanas ---- */
+.top-bar {
+    -fx-background-color: #1a6b4a;
+    -fx-padding: 12px 16px;
+}
+
+.top-bar-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.btn-logout {
+    -fx-background-color: rgba(255,255,255,0.2);
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-padding: 6px 14px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+}
+
+.btn-logout:hover {
+    -fx-background-color: rgba(255,255,255,0.35);
+}
+
+/* ---- Líneas verticales en tablas ---- */
+.table-view .table-cell {
+    -fx-border-color: transparent #dddddd transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+}
+
+.table-view .column-header {
+    -fx-border-color: transparent #bbbbbb transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+}

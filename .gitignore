@@ -1,0 +1,29 @@
+# =============================================
+#   PharmacyFM - .gitignore
+# =============================================
+
+# ---- Compilados de Eclipse ----
+/bin/
+
+# ---- Compilados de Maven ----
+/target/
+
+# ---- Base de datos (datos reales, no subir) ----
+/db/
+*.db
+
+# ---- Archivos internos de Eclipse ----
+.classpath
+.project
+.settings/
+.metadata/
+
+# ---- JDK local (nunca se sube) ----
+/jdk-23/
+
+# ---- Librerías locales si Maven las gestiona ----
+/lib/
+
+# ---- Archivos del sistema operativo ----
+.DS_Store
+Thumbs.db
