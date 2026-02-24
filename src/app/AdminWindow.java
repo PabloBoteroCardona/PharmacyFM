@@ -28,19 +28,22 @@ import javafx.stage.Stage;
 
 public class AdminWindow {
 
+    // Inicialización de servicios y repositorios para la gestión de datos
     private static final FormulaService formulaService         = new FormulaService();
     private static final PedidoService pedidoService           = new PedidoService();
     private static final PacienteRepository pacienteRepository = new PacienteRepository();
 
+    // Método para cargar la hoja de estilos personalizada
     private static String getCss() {
         return new java.io.File("src/resource/styles.css").toURI().toString();
     }
 
+    // Configuración y despliegue de la ventana principal del administrador
     public static void show(Stage stage, User user) {
 
         BorderPane root = new BorderPane();
 
-        // ---- Barra superior con estilo verde ----
+        // ---- Barra superior con saludo y cierre de sesión ----
         Label lblWelcome = new Label("Panel Administrador - " + user.getNombre());
         lblWelcome.getStyleClass().add("top-bar-title");
 
@@ -48,6 +51,7 @@ public class AdminWindow {
         btnLogout.getStyleClass().add("btn-logout");
         btnLogout.setOnAction(_ -> LoginScreen.show(stage));
 
+        // Espaciador para empujar el botón de logout a la derecha
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
@@ -56,17 +60,20 @@ public class AdminWindow {
         topBar.setAlignment(Pos.CENTER_LEFT);
         root.setTop(topBar);
 
-        // ---- Pestañas ----
+        // ---- Configuración de las pestañas de navegación ----
         javafx.scene.control.TabPane tabs = new javafx.scene.control.TabPane();
 
+        // Pestaña de Pedidos
         javafx.scene.control.Tab tabPedidos = new javafx.scene.control.Tab("Pedidos");
         tabPedidos.setClosable(false);
         tabPedidos.setContent(createPedidosContent());
 
+        // Pestaña de Fórmulas
         javafx.scene.control.Tab tabFormulas = new javafx.scene.control.Tab("Fórmulas");
         tabFormulas.setClosable(false);
         tabFormulas.setContent(createFormulasContent());
 
+        // Pestaña de Pacientes
         javafx.scene.control.Tab tabPacientes = new javafx.scene.control.Tab("Pacientes");
         tabPacientes.setClosable(false);
         tabPacientes.setContent(createPacientesContent());
@@ -74,6 +81,7 @@ public class AdminWindow {
         tabs.getTabs().addAll(tabPedidos, tabFormulas, tabPacientes);
         root.setCenter(tabs);
 
+        // Visualización de la escena principal
         Scene scene = new Scene(root, 1000, 650);
         scene.getStylesheets().add(getCss());
         stage.setScene(scene);
@@ -82,7 +90,7 @@ public class AdminWindow {
     }
 
     // ============================================================
-    //                         PEDIDOS
+    // SECCIÓN: GESTIÓN DE PEDIDOS
     // ============================================================
 
     private static VBox createPedidosContent() {
@@ -92,6 +100,7 @@ public class AdminWindow {
         Label title = new Label("Gestión de pedidos");
         title.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
 
+        // Definición de la tabla de pedidos y sus columnas
         TableView<Pedido> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
@@ -120,10 +129,12 @@ public class AdminWindow {
         table.getColumns().add(colEstado);
         table.getColumns().add(colObs);
 
+        // Carga inicial de datos en la tabla
         ObservableList<Pedido> data = FXCollections.observableArrayList();
         cargarPedidos(data);
         table.setItems(data);
 
+        // Botones de control para la sección de pedidos
         Button btnActualizarEstado = new Button("Cambiar estado");
         btnActualizarEstado.getStyleClass().add("btn-primary");
 
@@ -141,7 +152,8 @@ public class AdminWindow {
 
         return root;
     }
-
+    
+    // Abre un diálogo modal para modificar el estado del pedido seleccionado
     private static void mostrarCambiarEstadoDialog(TableView<Pedido> table, ObservableList<Pedido> data) {
         Pedido selected = table.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -164,6 +176,7 @@ public class AdminWindow {
         Button btnCancelar = new Button("Cancelar");
         btnCancelar.getStyleClass().add("btn-secondary");
 
+        // Acción de guardado y refresco de la tabla
         btnGuardar.setOnAction(event -> {
             if (event == null) return;
             boolean ok = pedidoService.actualizarEstado(selected.getId(), cbEstado.getValue());
@@ -190,13 +203,14 @@ public class AdminWindow {
         dialog.showAndWait();
     }
 
+    // Refresca la información de pedidos consultando al servicio
     private static void cargarPedidos(ObservableList<Pedido> data) {
         data.clear();
         data.addAll(pedidoService.getAllPedidos());
     }
 
     // ============================================================
-    //                         FORMULAS
+    // SECCIÓN: GESTIÓN DE FÓRMULAS
     // ============================================================
 
     private static VBox createFormulasContent() {
@@ -206,6 +220,7 @@ public class AdminWindow {
         Label title = new Label("Gestión de Fórmulas Magistrales");
         title.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
 
+        // Tabla de fórmulas con columnas vinculadas a los atributos del objeto Formula
         TableView<Formula> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
@@ -225,6 +240,7 @@ public class AdminWindow {
         ObservableList<Formula> data = FXCollections.observableArrayList(formulaService.getAllFormulas());
         table.setItems(data);
 
+        // Botones para operaciones CRUD de fórmulas
         Button btnAdd  = new Button("Añadir");
         btnAdd.getStyleClass().add("btn-primary");
 
@@ -262,6 +278,7 @@ public class AdminWindow {
         return root;
     }
 
+    // Maneja la creación y edición de fórmulas mediante un diálogo común
     private static void mostrarDialogFormula(Formula formulaOriginal, ObservableList<Formula> data) {
         Stage dlg = new Stage();
         dlg.initModality(Modality.APPLICATION_MODAL);
@@ -287,10 +304,12 @@ public class AdminWindow {
         btnGuardar.setOnAction(event -> {
             if (event == null) return;
             try {
+                // Validación de entrada numérica para el precio
                 double precio = Double.parseDouble(txtPrecio.getText().trim());
                 formula.setNombre(txtNombre.getText().trim());
                 formula.setDescripcion(txtDescripcion.getText().trim());
                 formula.setPrecio(precio);
+                
                 boolean ok = formulaService.guardarFormula(formula);
                 if (ok) {
                     data.setAll(formulaService.getAllFormulas());
@@ -323,7 +342,7 @@ public class AdminWindow {
     }
 
     // ============================================================
-    //                         PACIENTES
+    // SECCIÓN: GESTIÓN DE PACIENTES
     // ============================================================
 
     private static VBox createPacientesContent() {
@@ -333,6 +352,7 @@ public class AdminWindow {
         Label title = new Label("Gestión de Pacientes");
         title.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
 
+        // Tabla de pacientes con columnas de información de contacto
         TableView<Paciente> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
@@ -376,6 +396,7 @@ public class AdminWindow {
         return root;
     }
 
+    // Formulario para la actualización de datos personales del paciente
     private static void mostrarDialogEditarPaciente(Paciente p, ObservableList<Paciente> data) {
         Stage dlg = new Stage();
         dlg.initModality(Modality.APPLICATION_MODAL);
@@ -396,6 +417,7 @@ public class AdminWindow {
             p.setNombre(txtNombre.getText().trim());
             p.setEmail(txtEmail.getText().trim());
             p.setTelefono(txtTelefono.getText().trim());
+            
             boolean ok = pacienteRepository.update(p);
             if (ok) {
                 data.setAll(pacienteRepository.findAll());
@@ -425,9 +447,10 @@ public class AdminWindow {
     }
 
     // ============================================================
-    //                        UTILIDADES
+    // UTILIDADES GENERALES
     // ============================================================
 
+    // Centraliza la creación de ventanas de aviso para feedback del sistema
     private static void mostrarAlerta(String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK);
         alert.setHeaderText(null);

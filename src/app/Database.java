@@ -15,13 +15,20 @@ import java.sql.Statement;
  */
 public class Database {
 
+    /**
+     * Configura la estructura inicial de la base de datos SQLite.
+     * Crea las tablas necesarias y asegura la existencia de un usuario administrador.
+     */
     public static void initializeDatabase() throws SQLException {
+        // Uso de try-with-resources para asegurar el cierre automático de la conexión y el statement
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
 
+            // Activación del soporte para claves foráneas en SQLite
             stmt.execute("PRAGMA foreign_keys = ON;");
 
-            // Tabla usuarios
+            // ---- Estructura de la tabla Usuarios ----
+            // Almacena credenciales y datos básicos para el control de acceso y roles
             stmt.execute(
                 "CREATE TABLE IF NOT EXISTS usuarios (" +
                 " id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -33,7 +40,8 @@ public class Database {
                 ");"
             );
 
-            // Tabla pacientes
+            // ---- Estructura de la tabla Pacientes ----
+            // Relacionada con un usuario para permitir el acceso al perfil personal
             stmt.execute(
                 "CREATE TABLE IF NOT EXISTS pacientes (" +
                 " id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -45,17 +53,19 @@ public class Database {
                 ");"
             );
 
-            // Tabla formulas
+            // ---- Estructura de la tabla Formulas ----
+            // Catálogo de fórmulas magistrales disponibles con su descripción y precio
             stmt.execute(
                 "CREATE TABLE IF NOT EXISTS formulas (" +
                 " id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 " nombre TEXT NOT NULL," +
-                " descripcion TEXT," +
+                " descripción TEXT," +
                 " precio REAL" +
                 ");"
             );
 
-            // Tabla pedidos — incluye columna 'unidad'
+            // ---- Estructura de la tabla Pedidos ----
+            // Registra las solicitudes, vinculando pacientes con fórmulas y gestionando el estado del pedido
             stmt.execute(
                 "CREATE TABLE IF NOT EXISTS pedidos (" +
                 " id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -72,8 +82,11 @@ public class Database {
                 ");"
             );
 
-            // Admin por defecto — solo se inserta si no existe
+            // ---- Inserción del Administrador por defecto ----
+            // Se utiliza BCrypt para el hashing de la contraseña por seguridad
             String adminHash = BCrypt.hashpw("admin", BCrypt.gensalt());
+            
+            // Se usa INSERT OR IGNORE para evitar duplicados si la base de datos ya está inicializada
             stmt.execute(
                 "INSERT OR IGNORE INTO usuarios (id, email, password, nombre, telefono, rol) " +
                 "VALUES (1, 'admin', '" + adminHash + "', 'Administrador', '', 'admin');"

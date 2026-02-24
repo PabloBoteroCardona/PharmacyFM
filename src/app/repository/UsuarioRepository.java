@@ -7,14 +7,15 @@ import java.sql.*;
 
 /**
  * Repositorio de usuarios.
- * Responsable exclusivamente de las operaciones de base de datos
- * relacionadas con la tabla 'usuarios'.
+ * Se encarga exclusivamente de las consultas y operaciones en la tabla 'usuarios'.
+ * Centraliza el acceso a los datos de acceso y perfiles de usuario.
  */
 public class UsuarioRepository {
 
     /**
-     * Busca un usuario por su email.
-     * Devuelve el User si existe, null si no.
+     * Busca un usuario en la base de datos utilizando su dirección de email.
+     * @param email El correo electrónico del usuario.
+     * @return Un objeto User con los datos del perfil si se encuentra, o null si no existe.
      */
     public User findByEmail(String email) {
         String sql = "SELECT * FROM usuarios WHERE email = ?";
@@ -22,10 +23,12 @@ public class UsuarioRepository {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+            // Evitamos inyección de código malicioso usando parámetros en la consulta
             stmt.setString(1, email);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    // Convertimos la fila de la base de datos en un objeto User
                     return new User(
                             rs.getInt("id"),
                             rs.getString("email"),
@@ -44,8 +47,8 @@ public class UsuarioRepository {
     }
 
     /**
-     * Devuelve el hash de contraseña almacenado para un email dado.
-     * Devuelve null si el email no existe.
+     * Recupera la contraseña encriptada (hash) asociada a un email.
+     * Se utiliza durante el proceso de login para comparar con la clave introducida por el usuario.
      */
     public String getPasswordHashByEmail(String email) {
         String sql = "SELECT password FROM usuarios WHERE email = ?";
@@ -69,7 +72,8 @@ public class UsuarioRepository {
     }
 
     /**
-     * Comprueba si ya existe un usuario registrado con ese email.
+     * Verifica si un correo electrónico ya está registrado en el sistema.
+     * Útil para validar registros nuevos y evitar emails duplicados.
      */
     public boolean existsByEmail(String email) {
         String sql = "SELECT COUNT(*) FROM usuarios WHERE email = ?";
@@ -81,6 +85,7 @@ public class UsuarioRepository {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    // Si el conteo es mayor a 0, el email ya existe
                     return rs.getInt(1) > 0;
                 }
             }
@@ -93,8 +98,10 @@ public class UsuarioRepository {
     }
 
     /**
-     * Inserta un nuevo usuario en la base de datos.
-     * Devuelve el id generado, o -1 si falla.
+     * Crea un nuevo registro de usuario.
+     * Nota: Recibe la conexión externa para poder realizar esta operación 
+     * junto a la creación del perfil de paciente como una única acción.
+     * @return El ID generado para el nuevo usuario o -1 si hubo un error.
      */
     public int insert(String email, String passwordHash, String nombre, String telefono, String rol, Connection conn) throws SQLException {
         String sql = "INSERT INTO usuarios (email, password, nombre, telefono, rol) VALUES (?, ?, ?, ?, ?)";
@@ -107,6 +114,7 @@ public class UsuarioRepository {
             stmt.setString(5, rol);
             stmt.executeUpdate();
 
+            // Obtenemos el ID autoincremental que ha asignado la base de datos
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -117,9 +125,9 @@ public class UsuarioRepository {
     }
 
     /**
-     * Actualiza la contraseña de un usuario dado su email.
-     * Recibe el hash ya generado con BCrypt.
-     * Devuelve true si se actualizó correctamente.
+     * Modifica la contraseña de un usuario.
+     * @param email El correo que identifica al usuario.
+     * @param passwordHash El nuevo hash de la contraseña generado con BCrypt.
      */
     public boolean updatePassword(String email, String passwordHash) {
         String sql = "UPDATE usuarios SET password = ? WHERE email = ?";

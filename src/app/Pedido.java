@@ -1,7 +1,13 @@
 package app;
 
+/**
+ * Modelo de datos que representa un Pedido de una fórmula magistral.
+ * Esta clase consolida la información necesaria para ser visualizada en las tablas 
+ * de administración y de usuario, uniendo datos del paciente y de la fórmula.
+ */
 public class Pedido {
 
+    // Atributos privados para representar el estado y los detalles del pedido
     private int id;
     private int idPaciente;
     private String nombrePaciente;
@@ -12,6 +18,10 @@ public class Pedido {
     private String unidad;
     private String observaciones;
 
+    /**
+     * Constructor completo para inicializar un Pedido con todos sus detalles.
+     * Se utiliza para mapear los resultados de las consultas JOIN en la base de datos.
+     */
     public Pedido(int id, int idPaciente, String nombrePaciente,
                   String fecha, String nombreFormula,
                   String estado, int cantidad, String unidad, String observaciones) {
@@ -26,6 +36,8 @@ public class Pedido {
         this.observaciones = observaciones;
     }
 
+    // -------- MÉTODOS DE ACCESO (GETTERS) --------
+
     public int getId() { return id; }
     public int getIdPaciente() { return idPaciente; }
     public String getNombrePaciente() { return nombrePaciente; }
@@ -37,12 +49,12 @@ public class Pedido {
     public String getObservaciones() { return observaciones; }
 
     /**
-     * Devuelve cantidad y unidad juntas para mostrar en la tabla.
-     * Ejemplo: "180 Cápsulas"
+     * Método de utilidad diseñado para la capa de presentación (UI).
      */
     public String getCantidadConUnidad() {
         return cantidad + " " + (unidad != null ? unidad : "");
     }
 
+    // Permite la actualización del estado del pedido por parte del administrador
     public void setEstado(String estado) { this.estado = estado; }
 }

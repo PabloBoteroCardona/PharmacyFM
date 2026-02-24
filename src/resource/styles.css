@@ -1,10 +1,14 @@
-/* =============================================
+/* ============================================================
    PharmacyFM - Estilos personalizados
-   ============================================= */
+   ============================================================ */
 
-/* ---- Panel izquierdo del login ---- */
+/* ESTILOS PARA LA PANTALLA DE LOGIN
+   Se divide en dos paneles para un diseño moderno (Split Screen)
+*/
+
+/* Panel izquierdo: Contenedor de marca y colores corporativos */
 .login-left-panel {
-    -fx-background-color: #1a6b4a;
+    -fx-background-color: #1a6b4a; /* Verde oscuro principal */
     -fx-padding: 40px;
 }
 
@@ -16,7 +20,7 @@
 
 .login-app-subtitle {
     -fx-font-size: 14px;
-    -fx-text-fill: rgba(255, 255, 255, 0.8);
+    -fx-text-fill: rgba(255, 255, 255, 0.8); /* Blanco con transparencia */
     -fx-wrap-text: true;
 }
 
@@ -24,7 +28,7 @@
     -fx-font-size: 64px;
 }
 
-/* ---- Panel derecho del login ---- */
+/* Panel derecho: Formulario de entrada de datos */
 .login-right-panel {
     -fx-background-color: white;
     -fx-padding: 40px 40px 50px 40px;
@@ -41,33 +45,39 @@
     -fx-text-fill: #888888;
 }
 
+/* Etiquetas de campo (Username, Password, etc.) */
 .login-label {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-text-fill: #444444;
 }
 
+/* Estilo para mensajes de validación o error */
 .login-error {
-    -fx-text-fill: #e74c3c;
+    -fx-text-fill: #e74c3c; /* Rojo para errores */
     -fx-font-size: 12px;
 }
 
-/* ---- Botón principal ---- */
+/* BOTONES DE LA APLICACIÓN
+   Diseño de botones con estados visuales (normal y hover)
+*/
+
+/* Botón de acción principal (Entrar, Guardar) */
 .btn-primary {
     -fx-background-color: #1a6b4a;
     -fx-text-fill: white;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-padding: 10px 20px;
-    -fx-background-radius: 6px;
-    -fx-cursor: hand;
+    -fx-background-radius: 6px; /* Bordes redondeados */
+    -fx-cursor: hand; /* Cambia el cursor a mano al pasar por encima */
 }
 
 .btn-primary:hover {
     -fx-background-color: #145c3e;
 }
 
-/* ---- Botón secundario ---- */
+/* Botón secundario para acciones alternativas (Registrarse, Cancelar) */
 .btn-secondary {
     -fx-background-color: transparent;
     -fx-text-fill: #1a6b4a;
@@ -84,7 +94,11 @@
     -fx-background-color: #f0faf5;
 }
 
-/* ---- Barra superior de ventanas ---- */
+/* COMPONENTES DE NAVEGACIÓN Y TABLAS
+   Estilos para la barra superior y las tablas de datos
+*/
+
+/* Barra de herramientas/encabezado de las ventanas principales */
 .top-bar {
     -fx-background-color: #1a6b4a;
     -fx-padding: 12px 16px;
@@ -96,6 +110,7 @@
     -fx-text-fill: white;
 }
 
+/* Botón específico para el cierre de sesión */
 .btn-logout {
     -fx-background-color: rgba(255,255,255,0.2);
     -fx-text-fill: white;
@@ -109,12 +124,17 @@
     -fx-background-color: rgba(255,255,255,0.35);
 }
 
-/* ---- Líneas verticales en tablas ---- */
+/* CUSTOMIZACIÓN DE TABLAS (TableView)
+   Ajustes visuales para mejorar la legibilidad de las celdas
+*/
+
+/* Separadores verticales suaves para las celdas */
 .table-view .table-cell {
     -fx-border-color: transparent #dddddd transparent transparent;
     -fx-border-width: 0 1px 0 0;
 }
 
+/* Estilo para los encabezados de columna */
 .table-view .column-header {
     -fx-border-color: transparent #bbbbbb transparent transparent;
     -fx-border-width: 0 1px 0 0;
