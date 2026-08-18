@@ -3,6 +3,10 @@ package app;
 import app.repository.PacienteRepository;
 import app.service.FormulaService;
 import app.service.PedidoService;
+import com.pharmacyfm.domain.model.Formula;
+import com.pharmacyfm.domain.model.Paciente;
+import com.pharmacyfm.domain.model.Pedido;
+import com.pharmacyfm.domain.model.User;
 import java.util.List;
 
 import javafx.collections.FXCollections;
@@ -38,7 +42,7 @@ public class UserWindow {
     public static void show(Stage stage, User user) {
 
         // Verificación de la existencia del perfil de paciente asociado al usuario
-        Paciente paciente = pacienteRepository.findByUserId(user.getId());
+        Paciente paciente = pacienteRepository.findByUserId(user.id());
         if (paciente == null) {
             mostrarAlerta("No se ha encontrado la ficha de paciente asociada a este usuario.");
             LoginScreen.show(stage);
@@ -48,8 +52,9 @@ public class UserWindow {
         BorderPane root = new BorderPane();
 
         // ---- Header personalizado ----
-        String nombre = (user.getNombre() != null && !user.getNombre().isEmpty())
-                ? user.getNombre() : user.getEmail();
+        // Usamos el nombre si existe, o el email como fallback para el saludo
+        String nombre = (user.nombre() != null && !user.nombre().isEmpty())
+                ? user.nombre() : user.email();
 
         Label lblWelcome = new Label("Bienvenido/a, " + nombre + " (Paciente)");
         lblWelcome.getStyleClass().add("top-bar-title");

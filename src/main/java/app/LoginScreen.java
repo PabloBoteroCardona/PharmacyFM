@@ -1,6 +1,8 @@
 package app;
 
 import app.service.AuthService;
+import com.pharmacyfm.domain.model.Role;
+import com.pharmacyfm.domain.model.User;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -107,8 +109,7 @@ public class LoginScreen {
             }
 
             lblError.setText("");
-            // Redirección según el rol del usuario autenticado
-            if ("admin".equalsIgnoreCase(user.getRol())) {
+            if (user.role() == Role.ADMIN) {
                 AdminWindow.show(stage, user);
             } else {
                 UserWindow.show(stage, user);

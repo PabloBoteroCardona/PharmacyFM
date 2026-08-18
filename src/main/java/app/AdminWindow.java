@@ -3,6 +3,10 @@ package app;
 import app.repository.PacienteRepository;
 import app.service.FormulaService;
 import app.service.PedidoService;
+import com.pharmacyfm.domain.model.Formula;
+import com.pharmacyfm.domain.model.Paciente;
+import com.pharmacyfm.domain.model.Pedido;
+import com.pharmacyfm.domain.model.User;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -43,7 +47,7 @@ public class AdminWindow {
         BorderPane root = new BorderPane();
 
         // ---- Barra superior con saludo y cierre de sesión ----
-        Label lblWelcome = new Label("Panel Administrador - " + user.getNombre());
+        Label lblWelcome = new Label("Panel Administrador - " + user.nombre());
         lblWelcome.getStyleClass().add("top-bar-title");
 
         Button btnLogout = new Button("Cerrar sesión");
@@ -303,13 +307,14 @@ public class AdminWindow {
         btnGuardar.setOnAction(event -> {
             if (event == null) return;
             try {
-                // Validación de entrada numérica para el precio
                 double precio = Double.parseDouble(txtPrecio.getText().trim());
-                formula.setNombre(txtNombre.getText().trim());
-                formula.setDescripcion(txtDescripcion.getText().trim());
-                formula.setPrecio(precio);
-                
-                boolean ok = formulaService.guardarFormula(formula);
+                Formula toSave = new Formula(
+                        formula.getId(),
+                        txtNombre.getText().trim(),
+                        txtDescripcion.getText().trim(),
+                        precio
+                );
+                boolean ok = formulaService.guardarFormula(toSave);
                 if (ok) {
                     data.setAll(formulaService.getAllFormulas());
                     dlg.close();
@@ -413,11 +418,13 @@ public class AdminWindow {
 
         btnGuardar.setOnAction(event -> {
             if (event == null) return;
-            p.setNombre(txtNombre.getText().trim());
-            p.setEmail(txtEmail.getText().trim());
-            p.setTelefono(txtTelefono.getText().trim());
-            
-            boolean ok = pacienteRepository.update(p);
+            Paciente actualizado = new Paciente(
+                    p.getId(), p.getIdUsuario(),
+                    txtNombre.getText().trim(),
+                    txtTelefono.getText().trim(),
+                    txtEmail.getText().trim()
+            );
+            boolean ok = pacienteRepository.update(actualizado);
             if (ok) {
                 data.setAll(pacienteRepository.findAll());
                 dlg.close();
