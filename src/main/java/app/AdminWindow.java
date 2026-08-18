@@ -1,6 +1,7 @@
 package app;
 
-import app.repository.PacienteRepository;
+import com.pharmacyfm.infrastructure.persistence.JdbcPacienteRepository;
+import com.pharmacyfm.domain.port.PacienteRepository;
 import app.service.FormulaService;
 import app.service.PedidoService;
 import com.pharmacyfm.domain.model.Formula;
@@ -35,7 +36,7 @@ public class AdminWindow {
     // Inicialización de servicios y repositorios para la gestión de datos
     private static final FormulaService formulaService         = new FormulaService();
     private static final PedidoService pedidoService           = new PedidoService();
-    private static final PacienteRepository pacienteRepository = new PacienteRepository();
+    private static final PacienteRepository pacienteRepository = new JdbcPacienteRepository();
 
     private static String getCss() {
         return AdminWindow.class.getResource("/styles.css").toExternalForm();

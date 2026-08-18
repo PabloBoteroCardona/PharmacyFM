@@ -1,9 +1,11 @@
 package app.service;
 
-import app.DatabaseConnection;
-import app.repository.PacienteRepository;
-import app.repository.UsuarioRepository;
+import com.pharmacyfm.domain.port.PacienteRepository;
+import com.pharmacyfm.domain.port.UserRepository;
 import com.pharmacyfm.domain.model.User;
+import com.pharmacyfm.infrastructure.persistence.JdbcPacienteRepository;
+import com.pharmacyfm.infrastructure.persistence.JdbcUserRepository;
+import com.pharmacyfm.infrastructure.persistence.SqliteConnectionProvider;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
@@ -19,12 +21,35 @@ import java.sql.SQLException;
  * El método de registro ejecuta las inserciones en usuario y paciente
  * dentro de la misma transacción JDBC para garantizar atomicidad: si
  * alguna inserción falla, ambas se revierten con rollback.
+ *
+ * Depende de los puertos domain.port.UserRepository y domain.port.PacienteRepository;
+ * las implementaciones concretas se inyectarán por constructor en F3.
  */
 public class AuthService {
 
-    // Repositorios que acceden a las tablas 'usuarios' y 'pacientes'
-    private final UsuarioRepository usuarioRepository = new UsuarioRepository();
-    private final PacienteRepository pacienteRepository = new PacienteRepository();
+    // Tipados como puertos de dominio — el servicio no conoce la tecnología subyacente
+    private final UserRepository userRepository;
+    private final PacienteRepository pacienteRepository;
+
+    /**
+     * Constructor por defecto: cablea las implementaciones JDBC concretas.
+     * En F3 se sustituirá por inyección de dependencias real.
+     */
+    public AuthService() {
+        this.userRepository     = new JdbcUserRepository();
+        this.pacienteRepository = new JdbcPacienteRepository();
+    }
+
+    /**
+     * Constructor para tests: permite inyectar implementaciones alternativas (dobles de test).
+     *
+     * @param userRepository     Implementación del puerto de usuarios.
+     * @param pacienteRepository Implementación del puerto de pacientes.
+     */
+    public AuthService(UserRepository userRepository, PacienteRepository pacienteRepository) {
+        this.userRepository     = userRepository;
+        this.pacienteRepository = pacienteRepository;
+    }
 
     /**
      * Autentica a un usuario verificando su contraseña con BCrypt.
@@ -39,7 +64,7 @@ public class AuthService {
      */
     public User login(String email, String password) {
         // Recuperamos solo el hash; si el email no existe, devolvemos null de inmediato
-        String hashGuardado = usuarioRepository.getPasswordHashByEmail(email);
+        String hashGuardado = userRepository.getPasswordHashByEmail(email);
 
         if (hashGuardado == null) return null;
 
@@ -47,7 +72,7 @@ public class AuthService {
         if (!BCrypt.checkpw(password, hashGuardado)) return null;
 
         // Credenciales válidas: cargamos y devolvemos el perfil completo del usuario
-        return usuarioRepository.findByEmail(email);
+        return userRepository.findByEmail(email);
     }
 
     /**
@@ -58,7 +83,7 @@ public class AuthService {
      *   2. Genera el hash BCrypt de la contraseña.
      *   3. Inserta el usuario en la tabla 'usuarios'.
      *   4. Inserta el perfil en la tabla 'pacientes' usando el ID generado.
-     *   5. Confirma la transacción (commit) o la revierte (rollback) si algo falla.
+     *   5. Confirma (commit) o revierte (rollback) ambas inserciones.
      *
      * @param nombre    Nombre completo del nuevo paciente.
      * @param email     Email único que también servirá como nombre de usuario.
@@ -68,18 +93,18 @@ public class AuthService {
      */
     public boolean registrarPaciente(String nombre, String email, String password, String telefono) {
         // Comprobación de duplicidad antes de empezar la transacción
-        if (usuarioRepository.existsByEmail(email)) return false;
+        if (userRepository.existsByEmail(email)) return false;
 
         // Generamos el hash con BCrypt (10 rondas de sal por defecto)
         String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
 
         Connection conn = null;
         try {
-            conn = DatabaseConnection.getConnection();
+            conn = SqliteConnectionProvider.getConnection();
             conn.setAutoCommit(false); // Iniciamos la transacción manual
 
             // Paso 1: Insertar el registro en la tabla de usuarios
-            int idUsuario = usuarioRepository.insert(email, passwordHash, nombre, telefono, "paciente", conn);
+            int idUsuario = userRepository.insert(email, passwordHash, nombre, telefono, "paciente", conn);
             if (idUsuario <= 0) {
                 conn.rollback();
                 return false;
@@ -97,24 +122,24 @@ public class AuthService {
             return true;
 
         } catch (SQLException e) {
-            System.err.println("Error registrando paciente: " + e.getMessage());
+            System.err.println("[AuthService] Error registrando paciente: " + e.getMessage());
             // Revertimos cualquier cambio parcial realizado antes del error
             if (conn != null) {
                 try {
                     conn.rollback();
                 } catch (SQLException ex) {
-                    System.err.println("Error en rollback: " + ex.getMessage());
+                    System.err.println("[AuthService] Error en rollback: " + ex.getMessage());
                 }
             }
             return false;
         } finally {
-            // Restauramos autoCommit y cerramos la conexión siempre, tanto en éxito como en error
+            // Restauramos autoCommit y cerramos la conexión siempre, en éxito y en error
             if (conn != null) {
                 try {
                     conn.setAutoCommit(true);
                     conn.close();
                 } catch (SQLException e) {
-                    System.err.println("Error cerrando conexión transaccional: " + e.getMessage());
+                    System.err.println("[AuthService] Error cerrando conexión: " + e.getMessage());
                 }
             }
         }
@@ -133,9 +158,9 @@ public class AuthService {
      */
     public boolean recuperarPassword(String email, String nuevaPassword) {
         // Verificamos que el usuario exista antes de generar el hash
-        if (!usuarioRepository.existsByEmail(email)) return false;
+        if (!userRepository.existsByEmail(email)) return false;
 
         String nuevoHash = BCrypt.hashpw(nuevaPassword, BCrypt.gensalt());
-        return usuarioRepository.updatePassword(email, nuevoHash);
+        return userRepository.updatePassword(email, nuevoHash);
     }
 }

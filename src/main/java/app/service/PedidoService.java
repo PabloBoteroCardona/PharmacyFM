@@ -1,7 +1,8 @@
 package app.service;
 
-import app.repository.PedidoRepository;
+import com.pharmacyfm.domain.port.PedidoRepository;
 import com.pharmacyfm.domain.model.Pedido;
+import com.pharmacyfm.infrastructure.persistence.JdbcPedidoRepository;
 
 import java.util.List;
 
@@ -15,11 +16,31 @@ import java.util.List;
  *
  * Oculta la firma del repositorio (que acepta Integer idFormula nullable)
  * exponiendo dos métodos semánticamente distintos para cada tipo de pedido.
+ *
+ * Depende del puerto domain.port.PedidoRepository; en F3 la implementación
+ * concreta se inyectará desde fuera en lugar de instanciarse aquí.
  */
 public class PedidoService {
 
-    // Acceso a datos de pedidos; se instancia aquí hasta que F3 aplique inyección de constructor
-    private final PedidoRepository pedidoRepository = new PedidoRepository();
+    // Tipado como puerto de dominio — el servicio no conoce la tecnología subyacente
+    private final PedidoRepository pedidoRepository;
+
+    /**
+     * Constructor por defecto: cablea la implementación JDBC concreta.
+     * En F3 se sustituirá por inyección de dependencias desde el llamante.
+     */
+    public PedidoService() {
+        this.pedidoRepository = new JdbcPedidoRepository();
+    }
+
+    /**
+     * Constructor para tests: permite inyectar un doble de test (mock/stub).
+     *
+     * @param pedidoRepository Implementación alternativa del puerto.
+     */
+    public PedidoService(PedidoRepository pedidoRepository) {
+        this.pedidoRepository = pedidoRepository;
+    }
 
     /**
      * Devuelve el historial de pedidos de un paciente concreto,
@@ -55,7 +76,7 @@ public class PedidoService {
                                               int cantidad, String unidad, String observaciones) {
         // La cantidad negativa o cero no tiene sentido como solicitud de fármaco
         if (cantidad <= 0) {
-            System.err.println("La cantidad debe ser mayor que 0.");
+            System.err.println("[PedidoService] La cantidad debe ser mayor que 0.");
             return false;
         }
         // idFormula se pasa como Integer; null indica fórmula personalizada — aquí nunca es null
@@ -75,13 +96,13 @@ public class PedidoService {
     public boolean crearPedidoFormulaPersonalizada(int idPaciente, String nombreFormula,
                                                    int cantidad, String unidad, String observaciones) {
         if (cantidad <= 0) {
-            System.err.println("La cantidad debe ser mayor que 0.");
+            System.err.println("[PedidoService] La cantidad debe ser mayor que 0.");
             return false;
         }
 
         // El nombre de la fórmula es obligatorio cuando no se selecciona del catálogo
         if (nombreFormula == null || nombreFormula.trim().isEmpty()) {
-            System.err.println("El nombre de la fórmula personalizada no puede estar vacío.");
+            System.err.println("[PedidoService] El nombre de la fórmula personalizada no puede estar vacío.");
             return false;
         }
 
@@ -99,7 +120,7 @@ public class PedidoService {
      */
     public boolean actualizarEstado(int idPedido, String nuevoEstado) {
         if (nuevoEstado == null || nuevoEstado.trim().isEmpty()) {
-            System.err.println("El estado no puede estar vacío.");
+            System.err.println("[PedidoService] El estado no puede estar vacío.");
             return false;
         }
         return pedidoRepository.updateEstado(idPedido, nuevoEstado);

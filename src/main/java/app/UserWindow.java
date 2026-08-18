@@ -1,6 +1,7 @@
 package app;
 
-import app.repository.PacienteRepository;
+import com.pharmacyfm.infrastructure.persistence.JdbcPacienteRepository;
+import com.pharmacyfm.domain.port.PacienteRepository;
 import app.service.FormulaService;
 import app.service.PedidoService;
 import com.pharmacyfm.domain.model.Formula;
@@ -26,7 +27,7 @@ import javafx.stage.Stage;
 public class UserWindow {
 
     // Dependencias para la gestión de datos de pacientes, fórmulas y pedidos
-    private static final PacienteRepository pacienteRepository = new PacienteRepository();
+    private static final PacienteRepository pacienteRepository = new JdbcPacienteRepository();
     private static final FormulaService formulaService         = new FormulaService();
     private static final PedidoService pedidoService           = new PedidoService();
 
