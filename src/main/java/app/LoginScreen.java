@@ -25,11 +25,8 @@ public class LoginScreen {
 
     private static final AuthService authService = new AuthService();
 
-    /**
-     * Método reutilizable que devuelve la ruta del CSS para aplicar el estilo visual.
-     */
     private static String getCss() {
-        return new java.io.File("src/resource/styles.css").toURI().toString();
+        return LoginScreen.class.getResource("/styles.css").toExternalForm();
     }
 
     /**

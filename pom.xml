@@ -38,41 +38,39 @@
             <version>3.45.1.0</version>
         </dependency>
 
-        <!-- BCrypt para hashear contraseñas -->
+        <!-- BCrypt -->
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
 
-        <!-- AtlantaFX - tema visual moderno para JavaFX -->
+        <!-- AtlantaFX -->
         <dependency>
             <groupId>io.github.mkpaz</groupId>
             <artifactId>atlantafx-base</artifactId>
             <version>2.1.0</version>
         </dependency>
 
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.12.0</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
-        <sourceDirectory>src</sourceDirectory>
-
-        <!-- Incluir recursos como CSS desde la carpeta src -->
-        <resources>
-            <resource>
-                <directory>src</directory>
-                <includes>
-                    <include>**/*.css</include>
-                    <include>**/*.fxml</include>
-                    <include>**/*.png</include>
-                    <include>**/*.jpg</include>
-                </includes>
-            </resource>
-        </resources>
-
         <plugins>
 
-            <!-- Compilador Java 23 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -82,7 +80,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Plugin JavaFX para ejecutar la app -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -90,6 +87,12 @@
                 <configuration>
                     <mainClass>app.MainApp</mainClass>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.1</version>
             </plugin>
 
         </plugins>

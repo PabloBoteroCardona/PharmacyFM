@@ -33,9 +33,8 @@ public class AdminWindow {
     private static final PedidoService pedidoService           = new PedidoService();
     private static final PacienteRepository pacienteRepository = new PacienteRepository();
 
-    // Método para cargar la hoja de estilos personalizada
     private static String getCss() {
-        return new java.io.File("src/resource/styles.css").toURI().toString();
+        return AdminWindow.class.getResource("/styles.css").toExternalForm();
     }
 
     // Configuración y despliegue de la ventana principal del administrador

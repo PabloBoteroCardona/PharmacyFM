@@ -26,9 +26,8 @@ public class UserWindow {
     private static final FormulaService formulaService         = new FormulaService();
     private static final PedidoService pedidoService           = new PedidoService();
 
-    // Carga de estilos CSS personalizados
     private static String getCss() {
-        return new java.io.File("src/resource/styles.css").toURI().toString();
+        return UserWindow.class.getResource("/styles.css").toExternalForm();
     }
 
     /**
