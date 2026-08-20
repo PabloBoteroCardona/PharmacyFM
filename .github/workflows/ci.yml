@@ -1,0 +1,36 @@
+name: CI
+
+# Se ejecuta en cada push a cualquier rama y en pull requests hacia master
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 23 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: "23"
+          distribution: temurin
+          # Activa la caché automática de ~/.m2 para reducir tiempo de descarga
+          cache: maven
+
+      - name: Compilar, ejecutar tests y verificar cobertura (mvn verify)
+        run: mvn verify --batch-mode
+
+      - name: Publicar informe de cobertura JaCoCo
+        uses: actions/upload-artifact@v4
+        # Se sube siempre, incluso si el paso anterior falla, para inspeccionar resultados
+        if: always()
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+          retention-days: 7

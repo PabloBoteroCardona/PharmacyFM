@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Configuración de Logback para PharmacyFM.
+    Nivel raíz INFO: se verán los mensajes INFO, WARN y ERROR.
+    En desarrollo se puede bajar a DEBUG para ver SQL y detalles internos.
+-->
+<configuration>
+
+    <!-- Formato de salida por consola -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Patrón: hora | nivel | clase abreviada | mensaje -->
+            <pattern>%d{HH:mm:ss} %-5level [%logger{30}] %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Nivel por defecto para toda la aplicación -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!-- Silenciamos los avisos internos de SQLite y JavaFX que no son accionables -->
+    <logger name="org.sqlite" level="WARN"/>
+
+</configuration>

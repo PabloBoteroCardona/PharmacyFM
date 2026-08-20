@@ -15,7 +15,22 @@
         <maven.compiler.target>23</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>23</javafx.version>
+        <!-- Valor por defecto vacío; JaCoCo lo sobreescribe durante prepare-agent -->
+        <jacoco.argLine></jacoco.argLine>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- BOM de Spring Boot: gestiona versiones de todas sus dependencias transitivas -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>3.3.4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -38,41 +53,71 @@
             <version>3.45.1.0</version>
         </dependency>
 
-        <!-- BCrypt para hashear contraseñas -->
+        <!-- BCrypt -->
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
 
-        <!-- AtlantaFX - tema visual moderno para JavaFX -->
+        <!-- AtlantaFX -->
         <dependency>
             <groupId>io.github.mkpaz</groupId>
             <artifactId>atlantafx-base</artifactId>
             <version>2.1.0</version>
         </dependency>
 
+        <!-- Logging: SLF4J API + Logback como implementación -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.13</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.5.6</version>
+        </dependency>
+
+        <!-- Spring Boot REST API -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- OpenAPI / Swagger UI — documentación interactiva de la API REST -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.12.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Integración de Mockito con JUnit 5 (@ExtendWith(MockitoExtension.class)) -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.12.0</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
-        <sourceDirectory>src</sourceDirectory>
-
-        <!-- Incluir recursos como CSS desde la carpeta src -->
-        <resources>
-            <resource>
-                <directory>src</directory>
-                <includes>
-                    <include>**/*.css</include>
-                    <include>**/*.fxml</include>
-                    <include>**/*.png</include>
-                    <include>**/*.jpg</include>
-                </includes>
-            </resource>
-        </resources>
-
         <plugins>
 
-            <!-- Compilador Java 23 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -82,7 +127,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Plugin JavaFX para ejecutar la app -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -90,6 +134,109 @@
                 <configuration>
                     <mainClass>app.MainApp</mainClass>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <!--
+                        ${jacoco.argLine} es inyectado por JaCoCo prepare-agent durante mvn verify.
+                        En mvn test el valor es vacío (definido en <properties>), sin conflicto.
+                        Los add-opens son necesarios para Mockito 5 con Java 23.
+                    -->
+                    <argLine>
+                        @{jacoco.argLine}
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+            </plugin>
+
+            <!-- JaCoCo: cobertura de código con umbral mínimo del 70 % en dominio y servicios -->
+            <!-- Spring Boot: empaqueta un fat JAR ejecutable (java -jar) para la API REST -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.3.4</version>
+                <configuration>
+                    <mainClass>app.api.MainApiApp</mainClass>
+                    <!-- Excluir JARs de JavaFX y AtlantaFX: no se necesitan en el servidor -->
+                    <excludeGroupIds>org.openjfx,io.github.mkpaz</excludeGroupIds>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals><goal>repackage</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+
+                    <!--
+                        1. Inyecta el agente JaCoCo en la JVM de Surefire.
+                           propertyName debe coincidir con ${jacoco.argLine} en Surefire.
+                    -->
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals><goal>prepare-agent</goal></goals>
+                        <configuration>
+                            <propertyName>jacoco.argLine</propertyName>
+                        </configuration>
+                    </execution>
+
+                    <!-- 2. Genera el informe HTML en target/site/jacoco/ tras los tests -->
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals><goal>report</goal></goals>
+                    </execution>
+
+                    <!--
+                        3. Verifica el umbral del 70 % de instrucciones cubiertas.
+                           Solo se evalúa el dominio y la capa de servicios:
+                           se excluyen la UI, la infraestructura JDBC y AuthService
+                           (que requiere integración con BD para ser testeable).
+                    -->
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals><goal>check</goal></goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>app/api/**</exclude>
+                                <exclude>app/ui/**</exclude>
+                                <exclude>app/AdminWindow*</exclude>
+                                <exclude>app/UserWindow*</exclude>
+                                <exclude>app/LoginScreen*</exclude>
+                                <exclude>app/MainApp*</exclude>
+                                <exclude>app/AppContext*</exclude>
+                                <exclude>app/Database*</exclude>
+                                <exclude>app/service/AuthService*</exclude>
+                                <exclude>com/pharmacyfm/infrastructure/**</exclude>
+                            </excludes>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+
+                </executions>
             </plugin>
 
         </plugins>
