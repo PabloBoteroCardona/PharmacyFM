@@ -3,6 +3,9 @@ package com.pharmacyfm.infrastructure.persistence;
 import com.pharmacyfm.domain.model.Formula;
 import com.pharmacyfm.domain.port.FormulaRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +25,8 @@ import java.util.function.Supplier;
  * con bases de datos en memoria (SQLite :memory:) sin tocar el archivo de producción.
  */
 public class JdbcFormulaRepository implements FormulaRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(JdbcFormulaRepository.class);
 
     /**
      * Factoría de conexiones. En producción apunta a SqliteConnectionProvider;
@@ -80,7 +85,7 @@ public class JdbcFormulaRepository implements FormulaRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("[JdbcFormulaRepository] Error en findAll: " + e.getMessage());
+            log.error("[JdbcFormulaRepository] Error en findAll: {}", e.getMessage());
         }
         return lista;
     }
@@ -109,7 +114,7 @@ public class JdbcFormulaRepository implements FormulaRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("[JdbcFormulaRepository] Error en insert: " + e.getMessage());
+            log.error("[JdbcFormulaRepository] Error en insert: {}", e.getMessage());
         }
         return -1;
     }
@@ -133,7 +138,7 @@ public class JdbcFormulaRepository implements FormulaRepository {
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("[JdbcFormulaRepository] Error en update: " + e.getMessage());
+            log.error("[JdbcFormulaRepository] Error en update: {}", e.getMessage());
             return false;
         }
     }
@@ -153,7 +158,7 @@ public class JdbcFormulaRepository implements FormulaRepository {
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("[JdbcFormulaRepository] Error en delete: " + e.getMessage());
+            log.error("[JdbcFormulaRepository] Error en delete: {}", e.getMessage());
             return false;
         }
     }

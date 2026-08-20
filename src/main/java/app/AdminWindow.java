@@ -1,8 +1,7 @@
 package app;
 
-import com.pharmacyfm.infrastructure.persistence.JdbcPacienteRepository;
-import com.pharmacyfm.domain.port.PacienteRepository;
 import app.service.FormulaService;
+import app.service.PacienteService;
 import app.service.PedidoService;
 import com.pharmacyfm.domain.model.Formula;
 import com.pharmacyfm.domain.model.Paciente;
@@ -33,10 +32,10 @@ import javafx.stage.Stage;
 
 public class AdminWindow {
 
-    // Inicialización de servicios y repositorios para la gestión de datos
-    private static final FormulaService formulaService         = new FormulaService();
-    private static final PedidoService pedidoService           = new PedidoService();
-    private static final PacienteRepository pacienteRepository = new JdbcPacienteRepository();
+    // Servicios obtenidos de la raíz de composición (nunca instanciados aquí directamente)
+    private static final FormulaService  formulaService  = AppContext.get().formulaService();
+    private static final PedidoService   pedidoService   = AppContext.get().pedidoService();
+    private static final PacienteService pacienteService = AppContext.get().pacienteService();
 
     private static String getCss() {
         return AdminWindow.class.getResource("/styles.css").toExternalForm();
@@ -375,7 +374,7 @@ public class AdminWindow {
         table.getColumns().add(colTelefono);
 
         ObservableList<Paciente> data =
-                FXCollections.observableArrayList(pacienteRepository.findAll());
+                FXCollections.observableArrayList(pacienteService.getTodosPacientes());
         table.setItems(data);
 
         Button btnEditar   = new Button("Editar datos");
@@ -390,7 +389,7 @@ public class AdminWindow {
             else mostrarAlerta("Selecciona un paciente.");
         });
 
-        btnRecargar.setOnAction(_ -> data.setAll(pacienteRepository.findAll()));
+        btnRecargar.setOnAction(_ -> data.setAll(pacienteService.getTodosPacientes()));
 
         HBox botones = new HBox(10, btnEditar, btnRecargar);
         botones.setAlignment(Pos.CENTER_LEFT);
@@ -425,9 +424,9 @@ public class AdminWindow {
                     txtTelefono.getText().trim(),
                     txtEmail.getText().trim()
             );
-            boolean ok = pacienteRepository.update(actualizado);
+            boolean ok = pacienteService.actualizarPaciente(actualizado);
             if (ok) {
-                data.setAll(pacienteRepository.findAll());
+                data.setAll(pacienteService.getTodosPacientes());
                 dlg.close();
             } else {
                 mostrarAlerta("Error guardando los cambios.");

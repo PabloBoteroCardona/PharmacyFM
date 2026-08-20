@@ -4,6 +4,9 @@ import com.pharmacyfm.domain.model.EstadoPedido;
 import com.pharmacyfm.domain.model.Pedido;
 import com.pharmacyfm.domain.port.PedidoRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -24,6 +27,8 @@ import java.util.function.Supplier;
  * El proveedor de conexiones es inyectable para facilitar los tests de integración.
  */
 public class JdbcPedidoRepository implements PedidoRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(JdbcPedidoRepository.class);
 
     /** Formato de fecha/hora usado al insertar nuevos pedidos en SQLite. */
     private static final DateTimeFormatter FORMATO_FECHA =
@@ -84,7 +89,7 @@ public class JdbcPedidoRepository implements PedidoRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("[JdbcPedidoRepository] Error en findByPacienteId: " + e.getMessage());
+            log.error("[JdbcPedidoRepository] Error en findByPacienteId: {}", e.getMessage());
         }
         return lista;
     }
@@ -115,7 +120,7 @@ public class JdbcPedidoRepository implements PedidoRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("[JdbcPedidoRepository] Error en findAll: " + e.getMessage());
+            log.error("[JdbcPedidoRepository] Error en findAll: {}", e.getMessage());
         }
         return lista;
     }
@@ -160,7 +165,7 @@ public class JdbcPedidoRepository implements PedidoRepository {
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("[JdbcPedidoRepository] Error en insert: " + e.getMessage());
+            log.error("[JdbcPedidoRepository] Error en insert: {}", e.getMessage());
             return false;
         }
     }
@@ -181,7 +186,7 @@ public class JdbcPedidoRepository implements PedidoRepository {
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("[JdbcPedidoRepository] Error en updateEstado: " + e.getMessage());
+            log.error("[JdbcPedidoRepository] Error en updateEstado: {}", e.getMessage());
             return false;
         }
     }

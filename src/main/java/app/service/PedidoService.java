@@ -2,7 +2,8 @@ package app.service;
 
 import com.pharmacyfm.domain.port.PedidoRepository;
 import com.pharmacyfm.domain.model.Pedido;
-import com.pharmacyfm.infrastructure.persistence.JdbcPedidoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -17,26 +18,19 @@ import java.util.List;
  * Oculta la firma del repositorio (que acepta Integer idFormula nullable)
  * exponiendo dos métodos semánticamente distintos para cada tipo de pedido.
  *
- * Depende del puerto domain.port.PedidoRepository; en F3 la implementación
- * concreta se inyectará desde fuera en lugar de instanciarse aquí.
+ * Todas las dependencias se inyectan por constructor desde AppContext.
  */
 public class PedidoService {
 
-    // Tipado como puerto de dominio — el servicio no conoce la tecnología subyacente
+    private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
+
+    /** Puerto de acceso a datos de pedidos, inyectado por constructor. */
     private final PedidoRepository pedidoRepository;
 
     /**
-     * Constructor por defecto: cablea la implementación JDBC concreta.
-     * En F3 se sustituirá por inyección de dependencias desde el llamante.
-     */
-    public PedidoService() {
-        this.pedidoRepository = new JdbcPedidoRepository();
-    }
-
-    /**
-     * Constructor para tests: permite inyectar un doble de test (mock/stub).
+     * Constructor principal: recibe el repositorio inyectado desde AppContext.
      *
-     * @param pedidoRepository Implementación alternativa del puerto.
+     * @param pedidoRepository Implementación del puerto de pedidos.
      */
     public PedidoService(PedidoRepository pedidoRepository) {
         this.pedidoRepository = pedidoRepository;
@@ -50,6 +44,7 @@ public class PedidoService {
      * @return Lista de pedidos del paciente; lista vacía si no tiene ninguno.
      */
     public List<Pedido> getPedidosByPaciente(int idPaciente) {
+        log.debug("Cargando pedidos de idPaciente={}", idPaciente);
         return pedidoRepository.findByPacienteId(idPaciente);
     }
 
@@ -59,6 +54,7 @@ public class PedidoService {
      * @return Lista con todos los pedidos registrados; lista vacía si no hay ninguno.
      */
     public List<Pedido> getAllPedidos() {
+        log.debug("Cargando todos los pedidos del sistema");
         return pedidoRepository.findAll();
     }
 
@@ -76,11 +72,13 @@ public class PedidoService {
                                               int cantidad, String unidad, String observaciones) {
         // La cantidad negativa o cero no tiene sentido como solicitud de fármaco
         if (cantidad <= 0) {
-            System.err.println("[PedidoService] La cantidad debe ser mayor que 0.");
+            log.warn("Pedido rechazado: cantidad inválida={}", cantidad);
             return false;
         }
-        // idFormula se pasa como Integer; null indica fórmula personalizada — aquí nunca es null
-        return pedidoRepository.insert(idPaciente, idFormula, null, cantidad, unidad, observaciones);
+        boolean ok = pedidoRepository.insert(idPaciente, idFormula, null, cantidad, unidad, observaciones);
+        if (ok) log.info("Pedido creado (catálogo): idPaciente={}, idFormula={}", idPaciente, idFormula);
+        else    log.error("Error creando pedido de catálogo: idPaciente={}", idPaciente);
+        return ok;
     }
 
     /**
@@ -96,18 +94,21 @@ public class PedidoService {
     public boolean crearPedidoFormulaPersonalizada(int idPaciente, String nombreFormula,
                                                    int cantidad, String unidad, String observaciones) {
         if (cantidad <= 0) {
-            System.err.println("[PedidoService] La cantidad debe ser mayor que 0.");
+            log.warn("Pedido personalizado rechazado: cantidad inválida={}", cantidad);
             return false;
         }
 
         // El nombre de la fórmula es obligatorio cuando no se selecciona del catálogo
         if (nombreFormula == null || nombreFormula.trim().isEmpty()) {
-            System.err.println("[PedidoService] El nombre de la fórmula personalizada no puede estar vacío.");
+            log.warn("Pedido personalizado rechazado: nombre de fórmula vacío");
             return false;
         }
 
         // idFormula es null porque la fórmula no existe en el catálogo
-        return pedidoRepository.insert(idPaciente, null, nombreFormula, cantidad, unidad, observaciones);
+        boolean ok = pedidoRepository.insert(idPaciente, null, nombreFormula, cantidad, unidad, observaciones);
+        if (ok) log.info("Pedido creado (personalizado): idPaciente={}, nombre='{}'", idPaciente, nombreFormula);
+        else    log.error("Error creando pedido personalizado: idPaciente={}", idPaciente);
+        return ok;
     }
 
     /**
@@ -120,9 +121,12 @@ public class PedidoService {
      */
     public boolean actualizarEstado(int idPedido, String nuevoEstado) {
         if (nuevoEstado == null || nuevoEstado.trim().isEmpty()) {
-            System.err.println("[PedidoService] El estado no puede estar vacío.");
+            log.warn("Actualización de estado rechazada: estado vacío para idPedido={}", idPedido);
             return false;
         }
-        return pedidoRepository.updateEstado(idPedido, nuevoEstado);
+        boolean ok = pedidoRepository.updateEstado(idPedido, nuevoEstado);
+        if (ok) log.info("Estado actualizado a '{}' para idPedido={}", nuevoEstado, idPedido);
+        else    log.warn("No se encontró el pedido a actualizar, idPedido={}", idPedido);
+        return ok;
     }
 }

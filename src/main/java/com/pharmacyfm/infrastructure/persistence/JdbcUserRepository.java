@@ -4,6 +4,9 @@ import com.pharmacyfm.domain.model.Role;
 import com.pharmacyfm.domain.model.User;
 import com.pharmacyfm.domain.port.UserRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 
 /**
@@ -17,6 +20,8 @@ import java.sql.*;
  * la transacción de registro (usuario + paciente) que gestiona AuthService.
  */
 public class JdbcUserRepository implements UserRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(JdbcUserRepository.class);
 
     /**
      * {@inheritDoc}
@@ -45,7 +50,7 @@ public class JdbcUserRepository implements UserRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("[JdbcUserRepository] Error en findByEmail: " + e.getMessage());
+            log.error("[JdbcUserRepository] Error en findByEmail: {}", e.getMessage());
         }
         return null;
     }
@@ -70,7 +75,7 @@ public class JdbcUserRepository implements UserRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("[JdbcUserRepository] Error en getPasswordHashByEmail: " + e.getMessage());
+            log.error("[JdbcUserRepository] Error en getPasswordHashByEmail: {}", e.getMessage());
         }
         return null;
     }
@@ -95,7 +100,7 @@ public class JdbcUserRepository implements UserRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("[JdbcUserRepository] Error en existsByEmail: " + e.getMessage());
+            log.error("[JdbcUserRepository] Error en existsByEmail: {}", e.getMessage());
         }
         return false;
     }
@@ -144,7 +149,7 @@ public class JdbcUserRepository implements UserRepository {
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("[JdbcUserRepository] Error en updatePassword: " + e.getMessage());
+            log.error("[JdbcUserRepository] Error en updatePassword: {}", e.getMessage());
             return false;
         }
     }

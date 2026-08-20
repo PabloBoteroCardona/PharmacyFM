@@ -1,14 +1,14 @@
 package app;
 
-import com.pharmacyfm.infrastructure.persistence.JdbcPacienteRepository;
-import com.pharmacyfm.domain.port.PacienteRepository;
 import app.service.FormulaService;
+import app.service.PacienteService;
 import app.service.PedidoService;
 import com.pharmacyfm.domain.model.Formula;
 import com.pharmacyfm.domain.model.Paciente;
 import com.pharmacyfm.domain.model.Pedido;
 import com.pharmacyfm.domain.model.User;
 import java.util.List;
+import java.util.Optional;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,10 +26,10 @@ import javafx.stage.Stage;
  */
 public class UserWindow {
 
-    // Dependencias para la gestión de datos de pacientes, fórmulas y pedidos
-    private static final PacienteRepository pacienteRepository = new JdbcPacienteRepository();
-    private static final FormulaService formulaService         = new FormulaService();
-    private static final PedidoService pedidoService           = new PedidoService();
+    // Servicios obtenidos de la raíz de composición (nunca instanciados aquí directamente)
+    private static final PacienteService pacienteService = AppContext.get().pacienteService();
+    private static final FormulaService  formulaService  = AppContext.get().formulaService();
+    private static final PedidoService   pedidoService   = AppContext.get().pedidoService();
 
     private static String getCss() {
         return UserWindow.class.getResource("/styles.css").toExternalForm();
@@ -42,13 +42,14 @@ public class UserWindow {
      */
     public static void show(Stage stage, User user) {
 
-        // Verificación de la existencia del perfil de paciente asociado al usuario
-        Paciente paciente = pacienteRepository.findByUserId(user.id());
-        if (paciente == null) {
+        // Buscamos el perfil de paciente usando el servicio (devuelve Optional para evitar null)
+        Optional<Paciente> optPaciente = pacienteService.getPacientePorUsuario(user.id());
+        if (optPaciente.isEmpty()) {
             mostrarAlerta("No se ha encontrado la ficha de paciente asociada a este usuario.");
             LoginScreen.show(stage);
             return;
         }
+        Paciente paciente = optPaciente.get();
 
         BorderPane root = new BorderPane();
 

@@ -3,6 +3,9 @@ package com.pharmacyfm.infrastructure.persistence;
 import com.pharmacyfm.domain.model.Paciente;
 import com.pharmacyfm.domain.port.PacienteRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +21,8 @@ import java.util.function.Supplier;
  * El proveedor de conexiones es inyectable para facilitar los tests de integración.
  */
 public class JdbcPacienteRepository implements PacienteRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(JdbcPacienteRepository.class);
 
     /** Factoría de conexiones. En producción usa SqliteConnectionProvider. */
     private final Supplier<Connection> connectionFactory;
@@ -64,7 +69,7 @@ public class JdbcPacienteRepository implements PacienteRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("[JdbcPacienteRepository] Error en findByUserId: " + e.getMessage());
+            log.error("[JdbcPacienteRepository] Error en findByUserId: {}", e.getMessage());
         }
         return null;
     }
@@ -87,7 +92,7 @@ public class JdbcPacienteRepository implements PacienteRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("[JdbcPacienteRepository] Error en findAll: " + e.getMessage());
+            log.error("[JdbcPacienteRepository] Error en findAll: {}", e.getMessage());
         }
         return lista;
     }
@@ -129,7 +134,7 @@ public class JdbcPacienteRepository implements PacienteRepository {
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("[JdbcPacienteRepository] Error en update: " + e.getMessage());
+            log.error("[JdbcPacienteRepository] Error en update: {}", e.getMessage());
             return false;
         }
     }

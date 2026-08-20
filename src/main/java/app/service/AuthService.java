@@ -3,10 +3,10 @@ package app.service;
 import com.pharmacyfm.domain.port.PacienteRepository;
 import com.pharmacyfm.domain.port.UserRepository;
 import com.pharmacyfm.domain.model.User;
-import com.pharmacyfm.infrastructure.persistence.JdbcPacienteRepository;
-import com.pharmacyfm.infrastructure.persistence.JdbcUserRepository;
 import com.pharmacyfm.infrastructure.persistence.SqliteConnectionProvider;
 import org.mindrot.jbcrypt.BCrypt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,26 +22,20 @@ import java.sql.SQLException;
  * dentro de la misma transacción JDBC para garantizar atomicidad: si
  * alguna inserción falla, ambas se revierten con rollback.
  *
- * Depende de los puertos domain.port.UserRepository y domain.port.PacienteRepository;
- * las implementaciones concretas se inyectarán por constructor en F3.
+ * Todas las dependencias se inyectan por constructor desde AppContext.
  */
 public class AuthService {
 
-    // Tipados como puertos de dominio — el servicio no conoce la tecnología subyacente
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
+    /** Puerto de acceso a datos de usuarios. */
     private final UserRepository userRepository;
+
+    /** Puerto de acceso a datos de pacientes (para el registro transaccional). */
     private final PacienteRepository pacienteRepository;
 
     /**
-     * Constructor por defecto: cablea las implementaciones JDBC concretas.
-     * En F3 se sustituirá por inyección de dependencias real.
-     */
-    public AuthService() {
-        this.userRepository     = new JdbcUserRepository();
-        this.pacienteRepository = new JdbcPacienteRepository();
-    }
-
-    /**
-     * Constructor para tests: permite inyectar implementaciones alternativas (dobles de test).
+     * Constructor principal: recibe las dependencias inyectadas desde AppContext.
      *
      * @param userRepository     Implementación del puerto de usuarios.
      * @param pacienteRepository Implementación del puerto de pacientes.
@@ -63,16 +57,25 @@ public class AuthService {
      *         o null si el email no existe o la contraseña no coincide.
      */
     public User login(String email, String password) {
+        log.debug("Intento de login para email={}", email);
+
         // Recuperamos solo el hash; si el email no existe, devolvemos null de inmediato
         String hashGuardado = userRepository.getPasswordHashByEmail(email);
 
-        if (hashGuardado == null) return null;
+        if (hashGuardado == null) {
+            log.warn("Login fallido: email no registrado={}", email);
+            return null;
+        }
 
         // BCrypt.checkpw compara la contraseña introducida contra el hash almacenado
-        if (!BCrypt.checkpw(password, hashGuardado)) return null;
+        if (!BCrypt.checkpw(password, hashGuardado)) {
+            log.warn("Login fallido: contraseña incorrecta para email={}", email);
+            return null;
+        }
 
-        // Credenciales válidas: cargamos y devolvemos el perfil completo del usuario
-        return userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email);
+        log.info("Login exitoso para email={}, rol={}", email, user != null ? user.role() : "desconocido");
+        return user;
     }
 
     /**
@@ -93,7 +96,10 @@ public class AuthService {
      */
     public boolean registrarPaciente(String nombre, String email, String password, String telefono) {
         // Comprobación de duplicidad antes de empezar la transacción
-        if (userRepository.existsByEmail(email)) return false;
+        if (userRepository.existsByEmail(email)) {
+            log.warn("Registro rechazado: email ya registrado={}", email);
+            return false;
+        }
 
         // Generamos el hash con BCrypt (10 rondas de sal por defecto)
         String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
@@ -106,6 +112,7 @@ public class AuthService {
             // Paso 1: Insertar el registro en la tabla de usuarios
             int idUsuario = userRepository.insert(email, passwordHash, nombre, telefono, "paciente", conn);
             if (idUsuario <= 0) {
+                log.error("Error insertando usuario en la transacción de registro, email={}", email);
                 conn.rollback();
                 return false;
             }
@@ -113,22 +120,24 @@ public class AuthService {
             // Paso 2: Insertar el perfil de paciente vinculado al usuario recién creado
             boolean pacienteInsertado = pacienteRepository.insert(idUsuario, nombre, telefono, email, conn);
             if (!pacienteInsertado) {
+                log.error("Error insertando perfil de paciente, idUsuario={}", idUsuario);
                 conn.rollback();
                 return false;
             }
 
             // Todo correcto: confirmamos ambas inserciones como una sola unidad atómica
             conn.commit();
+            log.info("Registro exitoso de nuevo paciente, email={}", email);
             return true;
 
         } catch (SQLException e) {
-            System.err.println("[AuthService] Error registrando paciente: " + e.getMessage());
+            log.error("Error registrando paciente email={}: {}", email, e.getMessage());
             // Revertimos cualquier cambio parcial realizado antes del error
             if (conn != null) {
                 try {
                     conn.rollback();
                 } catch (SQLException ex) {
-                    System.err.println("[AuthService] Error en rollback: " + ex.getMessage());
+                    log.error("Error en rollback: {}", ex.getMessage());
                 }
             }
             return false;
@@ -139,7 +148,7 @@ public class AuthService {
                     conn.setAutoCommit(true);
                     conn.close();
                 } catch (SQLException e) {
-                    System.err.println("[AuthService] Error cerrando conexión: " + e.getMessage());
+                    log.error("Error cerrando conexión transaccional: {}", e.getMessage());
                 }
             }
         }
@@ -157,10 +166,14 @@ public class AuthService {
      * @return true si la contraseña se actualizó, false si el email no existe.
      */
     public boolean recuperarPassword(String email, String nuevaPassword) {
-        // Verificamos que el usuario exista antes de generar el hash
-        if (!userRepository.existsByEmail(email)) return false;
+        if (!userRepository.existsByEmail(email)) {
+            log.warn("Recuperación de contraseña rechazada: email no existe={}", email);
+            return false;
+        }
 
         String nuevoHash = BCrypt.hashpw(nuevaPassword, BCrypt.gensalt());
-        return userRepository.updatePassword(email, nuevoHash);
+        boolean ok = userRepository.updatePassword(email, nuevoHash);
+        if (ok) log.info("Contraseña actualizada para email={}", email);
+        return ok;
     }
 }

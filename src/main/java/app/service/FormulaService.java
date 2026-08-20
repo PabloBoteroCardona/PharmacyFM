@@ -2,7 +2,8 @@ package app.service;
 
 import com.pharmacyfm.domain.port.FormulaRepository;
 import com.pharmacyfm.domain.model.Formula;
-import com.pharmacyfm.infrastructure.persistence.JdbcFormulaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -17,26 +18,19 @@ import java.util.List;
  * (que devuelve true cuando id == 0), siguiendo el principio
  * «el modelo conoce su propio estado».
  *
- * Depende del puerto domain.port.FormulaRepository; en F3 la implementación
- * concreta se inyectará desde fuera en lugar de instanciarse aquí.
+ * Todas las dependencias se inyectan por constructor desde AppContext.
  */
 public class FormulaService {
 
-    // Tipado como puerto de dominio — el servicio no conoce si es JDBC, JPA u otro
+    private static final Logger log = LoggerFactory.getLogger(FormulaService.class);
+
+    /** Puerto de acceso a datos de fórmulas, inyectado por constructor. */
     private final FormulaRepository formulaRepository;
 
     /**
-     * Constructor por defecto: cablea la implementación JDBC concreta.
-     * En F3 se sustituirá por inyección de dependencias desde el llamante.
-     */
-    public FormulaService() {
-        this.formulaRepository = new JdbcFormulaRepository();
-    }
-
-    /**
-     * Constructor para tests: permite inyectar un doble de test (mock/stub).
+     * Constructor principal: recibe el repositorio inyectado desde AppContext.
      *
-     * @param formulaRepository Implementación alternativa del puerto.
+     * @param formulaRepository Implementación del puerto de fórmulas.
      */
     public FormulaService(FormulaRepository formulaRepository) {
         this.formulaRepository = formulaRepository;
@@ -49,6 +43,7 @@ public class FormulaService {
      * @return Lista de todas las fórmulas; lista vacía si no hay ninguna.
      */
     public List<Formula> getAllFormulas() {
+        log.debug("Cargando catálogo de fórmulas");
         return formulaRepository.findAll();
     }
 
@@ -65,21 +60,28 @@ public class FormulaService {
     public boolean guardarFormula(Formula f) {
         // Validación de nombre obligatorio
         if (f.getNombre() == null || f.getNombre().trim().isEmpty()) {
-            System.err.println("[FormulaService] El nombre de la fórmula no puede estar vacío.");
+            log.warn("Intento de guardar fórmula con nombre vacío");
             return false;
         }
 
         // Validación de precio no negativo (0 es válido para fórmulas sin coste)
         if (f.getPrecio() < 0) {
-            System.err.println("[FormulaService] El precio no puede ser negativo.");
+            log.warn("Intento de guardar fórmula con precio negativo: {}", f.getPrecio());
             return false;
         }
 
         // Determinamos si es nueva (id == 0) o una actualización (id > 0)
         if (f.isNew()) {
-            return formulaRepository.insert(f) > 0;
+            int id = formulaRepository.insert(f);
+            boolean ok = id > 0;
+            if (ok) log.info("Fórmula insertada con id={}", id);
+            else    log.error("Error al insertar fórmula '{}'", f.getNombre());
+            return ok;
         } else {
-            return formulaRepository.update(f);
+            boolean ok = formulaRepository.update(f);
+            if (ok) log.info("Fórmula actualizada, id={}", f.getId());
+            else    log.warn("No se encontró la fórmula a actualizar, id={}", f.getId());
+            return ok;
         }
     }
 
@@ -90,6 +92,9 @@ public class FormulaService {
      * @return true si se eliminó correctamente; false si el ID no existía.
      */
     public boolean eliminarFormula(int id) {
-        return formulaRepository.delete(id);
+        boolean ok = formulaRepository.delete(id);
+        if (ok) log.info("Fórmula eliminada, id={}", id);
+        else    log.warn("No se encontró la fórmula a eliminar, id={}", id);
+        return ok;
     }
 }
