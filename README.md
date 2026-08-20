@@ -1,16 +1,14 @@
 # PharmacyFM
 
-Aplicación de escritorio para la gestión de fórmulas magistrales en farmacias.  
-La idea surgió de un vacío real detectado tras años de experiencia en el sector de la salud: las farmacias no disponen de una herramienta sencilla para gestionar fórmulas magistrales, controlar la trazabilidad de los pedidos y mantener el contacto con sus pacientes desde una misma aplicación.
+Proyecto de fin de grado DAM — app de escritorio para farmacias. 
+La idea surgió de un vacío real detectado tras años de experiencia en el sector de la salud: las farmacias no disponen de una herramienta sencilla para gestionar 
+fórmulas magistrales, controlar la trazabilidad de los pedidos y mantener el contacto con sus pacientes desde una misma aplicación.
 
-El proyecto se desarrolló en dos etapas: una primera versión funcional como trabajo de fin de grado DAM, y una posterior **refactorización completa hacia Clean Architecture** con el objetivo de servir como demostración de diseño de software para portfolio.
-
-![CI](https://github.com/PabloBoteroCardona/PharmacyFM/actions/workflows/ci.yml/badge.svg)
-![Coverage](https://img.shields.io/badge/Cobertura-≥70%25-brightgreen?style=flat-square)
-![Java](https://img.shields.io/badge/Java-23-orange?style=flat-square&logo=openjdk)
+![Java](https://img.shields.io/badge/Java-23-orange?style=flat-square&logo=java)
 ![JavaFX](https://img.shields.io/badge/JavaFX-23-blue?style=flat-square)
 ![SQLite](https://img.shields.io/badge/SQLite-3.45-lightgrey?style=flat-square&logo=sqlite)
 ![Maven](https://img.shields.io/badge/Maven-3.x-red?style=flat-square&logo=apachemaven)
+![BCrypt](https://img.shields.io/badge/BCrypt-seguro-green?style=flat-square)
 
 ---
 
@@ -37,88 +35,40 @@ El proyecto se desarrolló en dos etapas: una primera versión funcional como tr
 - Recuperación de contraseña desde la pantalla de login
 
 ### Rol Administrador
-- Gestión completa del catálogo de fórmulas magistrales (CRUD)
-- Seguimiento de todos los pedidos con cambio de estado
-- Gestión de datos de contacto de pacientes
+- Gestión completa del catálogo de fórmulas magistrales
+- Seguimiento de pedidos con cambio de estado
+- Gestión de datos de pacientes
 
 ---
 
 ## Tecnologías
 
-| Tecnología | Versión | Uso |
-|---|---|---|
-| Java | 23 | Lenguaje principal |
-| JavaFX | 23 | Interfaz gráfica de escritorio |
-| AtlantaFX | 2.1.0 | Tema visual moderno (CupertinoLight) |
-| SQLite | 3.45 | Base de datos local embebida |
-| BCrypt | 0.4 | Hash seguro de contraseñas |
-| SLF4J + Logback | 2.0 / 1.5 | Logging estructurado |
-| JUnit 5 | 5.11 | Tests unitarios e integración |
-| Mockito | 5.12 | Mocks para tests unitarios de servicios |
-| JaCoCo | 0.8.12 | Cobertura de código (umbral ≥ 70 %) |
-| Maven | 3.x | Gestión de dependencias y ciclo de vida |
+| Tecnología | Uso |
+|---|---|
+| Java 23 | Lenguaje principal |
+| JavaFX 23 | Interfaz gráfica |
+| AtlantaFX | Tema visual moderno (CupertinoLight) |
+| SQLite | Base de datos local |
+| BCrypt | Hash seguro de contraseñas |
+| Maven | Gestión de dependencias |
 
 ---
 
 ## Arquitectura
 
-El proyecto sigue **Clean Architecture** con regla de dependencia estricta.  
-Las capas internas no conocen las externas: el dominio y los servicios son independientes de JavaFX, SQLite o cualquier otro framework.
+El proyecto sigue una arquitectura en tres capas que separa responsabilidades:
 
 ```
-┌─────────────────────────────────────────────┐
-│  UI  (app.ui.panels.*, AdminWindow…)        │  JavaFX — solo consume servicios
-└──────────────────┬──────────────────────────┘
-                   │ usa
-┌──────────────────▼──────────────────────────┐
-│  Services  (app.service.*)                  │  Casos de uso, constructor injection
-└──────────────────┬──────────────────────────┘
-                   │ implementa
-┌──────────────────▼──────────────────────────┐
-│  Domain  (com.pharmacyfm.domain.*)          │  ← Sin dependencias externas
-│    model/   records + enums inmutables      │
-│    port/    interfaces tecnología-agnósticas│
-└──────────────────▲──────────────────────────┘
-                   │ adaptadores
-┌──────────────────┴──────────────────────────┐
-│  Infrastructure  (…infrastructure.*)        │  JDBC + SQLite
-└─────────────────────────────────────────────┘
+UI (LoginScreen, AdminWindow, UserWindow)
+        ↓
+Servicios (AuthService, PedidoService, FormulaService)
+        ↓
+Repositorios (UsuarioRepository, PacienteRepository, FormulaRepository, PedidoRepository)
+        ↓
+Base de datos (DatabaseConnection → SQLite)
 ```
 
-**Decisiones de diseño clave:**
-
-- `domain` — Java records immutables (`Formula`, `Paciente`, `Pedido`), enums tipados (`Role`, `EstadoPedido`), interfaces de puerto. Cero imports de terceros.
-- `service` — lógica de negocio con validaciones. Inyección por constructor desde `AppContext` (composition root). Única dependencia externa: SLF4J API (facade, sin implementación).
-- `infrastructure` — adaptadores JDBC. `Supplier<Connection>` inyectable permite tests de integración con SQLite en archivo temporal sin afectar la BD de producción.
-- `ui` — paneles JavaFX desacoplados. Lambda cell value factories en lugar de `PropertyValueFactory`, compatible con records Java.
-
----
-
-## Tests
-
-**65 tests** organizados en tres categorías:
-
-| Categoría | Tests | Herramienta |
-|---|---|---|
-| Dominio (records, enums) | 25 | JUnit 5 |
-| Servicios (casos de uso) | 23 | JUnit 5 + Mockito |
-| Integración JDBC (SQLite) | 12 + utilidades | JUnit 5 |
-
-La cobertura de instrucciones sobre dominio y servicios se verifica automáticamente con JaCoCo en cada `mvn verify` (umbral mínimo 70 %).
-
-```bash
-mvn verify          # ejecuta tests + genera informe en target/site/jacoco/
-mvn test            # solo tests, sin verificación de cobertura
-```
-
----
-
-## CI/CD
-
-GitHub Actions ejecuta `mvn verify` en cada push y pull request hacia `master`.  
-El informe de cobertura JaCoCo se publica como artefacto del workflow.
-
-Configuración: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+Principios aplicados: **Responsabilidad única (SOLID)**, **DRY**, **patrón DAO/Repository**.
 
 ---
 
@@ -132,16 +82,16 @@ Configuración: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ```bash
 # 1. Clona el repositorio
-git clone https://github.com/PabloBoteroCardona/PharmacyFM.git
+git clone https://github.com/TU_USUARIO/pharmacyfm.git
 
 # 2. Entra en el directorio
-cd PharmacyFM
+cd pharmacyfm
 
 # 3. Ejecuta con Maven
 mvn javafx:run
 ```
 
-La base de datos se crea automáticamente en `~/.pharmacyfm/farmacia.db` en el primer arranque.
+La base de datos se crea automáticamente en el primer arranque.
 
 **Credenciales por defecto:**
 - Email: `admin` | Contraseña: `admin`
@@ -151,29 +101,18 @@ La base de datos se crea automáticamente en `~/.pharmacyfm/farmacia.db` en el p
 ## Estructura del proyecto
 
 ```
-PharmacyFM/
-├── .github/workflows/ci.yml          ← Pipeline CI (GitHub Actions)
+Pharmacy_FM/
 ├── src/
-│   ├── main/java/
-│   │   ├── app/
-│   │   │   ├── service/              ← Casos de uso (FormulaService, PedidoService…)
-│   │   │   ├── ui/
-│   │   │   │   ├── AlertHelper.java  ← Utilidad de diálogos compartida
-│   │   │   │   └── panels/           ← Paneles JavaFX (PedidosPanel, FormulasPanel…)
-│   │   │   ├── AppContext.java       ← Composition root (cableado de dependencias)
-│   │   │   ├── AdminWindow.java
-│   │   │   ├── UserWindow.java
-│   │   │   └── LoginScreen.java
-│   │   └── com/pharmacyfm/
-│   │       ├── domain/
-│   │       │   ├── model/            ← Records + enums (Formula, Pedido, EstadoPedido…)
-│   │       │   └── port/             ← Interfaces de repositorio (FormulaRepository…)
-│   │       └── infrastructure/
-│   │           └── persistence/      ← Adaptadores JDBC (JdbcFormulaRepository…)
-│   ├── main/resources/
-│   │   ├── logback.xml
-│   │   └── styles.css
-│   └── test/java/                    ← 65 tests (unitarios + integración)
+│   ├── app/
+│   │   ├── repository/       # Capa de acceso a datos
+│   │   ├── service/          # Lógica de negocio
+│   │   ├── Database.java     # Inicialización de BD
+│   │   ├── DatabaseConnection.java
+│   │   └── *.java            # Modelos y ventanas
+│   └── resource/
+│       └── styles.css        # Estilos personalizados
+├── docs/
+│   └── screenshots/
 └── pom.xml
 ```
 
@@ -181,13 +120,22 @@ PharmacyFM/
 
 ## Seguridad
 
-- Contraseñas almacenadas con **BCrypt** (factor de coste 10) — nunca en texto plano.
-- Todas las consultas SQL usan **`PreparedStatement`** — sin riesgo de inyección SQL.
-- La base de datos se guarda en el directorio del usuario (`~/.pharmacyfm/`) en lugar de rutas relativas, evitando problemas según el contexto de ejecución.
+Las contraseñas se almacenan con **BCrypt** (factor de coste 10), lo que las hace resistentes a ataques de fuerza bruta. Nunca se guardan en texto plano.
+
+---
+
+## Mejoras futuras
+
+- Envío de email real al recuperar contraseña (ahora se cambia desde la app)
+- Exportar el historial de pedidos a PDF
+- Añadir tests unitarios con JUnit
+- Quizás migrar el backend a Spring Boot en el futuro
 
 ---
 
 ## Autor
 
 **Pablo Botero Cardona** — Técnico Superior en DAM  
-[LinkedIn](https://www.linkedin.com/in/pablo-botero-cardona/) · [GitHub](https://github.com/PabloBoteroCardona)
+[LinkedIn](https://www.linkedin.com/in/pablo-botero-cardona/) - [GitHub](https://github.com/PabloBoteroCardona)
+
+
