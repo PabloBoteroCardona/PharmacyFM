@@ -19,6 +19,19 @@
         <jacoco.argLine></jacoco.argLine>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- BOM de Spring Boot: gestiona versiones de todas sus dependencias transitivas -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>3.3.4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
 
         <!-- JavaFX -->
@@ -64,6 +77,19 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.5.6</version>
+        </dependency>
+
+        <!-- Spring Boot REST API -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- OpenAPI / Swagger UI — documentación interactiva de la API REST -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.6.0</version>
         </dependency>
 
         <!-- Testing -->
@@ -130,6 +156,23 @@
             </plugin>
 
             <!-- JaCoCo: cobertura de código con umbral mínimo del 70 % en dominio y servicios -->
+            <!-- Spring Boot: empaqueta un fat JAR ejecutable (java -jar) para la API REST -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.3.4</version>
+                <configuration>
+                    <mainClass>app.api.MainApiApp</mainClass>
+                    <!-- Excluir JARs de JavaFX y AtlantaFX: no se necesitan en el servidor -->
+                    <excludeGroupIds>org.openjfx,io.github.mkpaz</excludeGroupIds>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals><goal>repackage</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -167,6 +210,7 @@
                         <goals><goal>check</goal></goals>
                         <configuration>
                             <excludes>
+                                <exclude>app/api/**</exclude>
                                 <exclude>app/ui/**</exclude>
                                 <exclude>app/AdminWindow*</exclude>
                                 <exclude>app/UserWindow*</exclude>

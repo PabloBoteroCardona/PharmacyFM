@@ -9,6 +9,7 @@ El proyecto se desarrolló en dos etapas: una primera versión funcional como tr
 ![Coverage](https://img.shields.io/badge/Cobertura-≥70%25-brightgreen?style=flat-square)
 ![Java](https://img.shields.io/badge/Java-23-orange?style=flat-square&logo=openjdk)
 ![JavaFX](https://img.shields.io/badge/JavaFX-23-blue?style=flat-square)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-brightgreen?style=flat-square&logo=springboot)
 ![SQLite](https://img.shields.io/badge/SQLite-3.45-lightgrey?style=flat-square&logo=sqlite)
 ![Maven](https://img.shields.io/badge/Maven-3.x-red?style=flat-square&logo=apachemaven)
 
@@ -55,6 +56,8 @@ El proyecto se desarrolló en dos etapas: una primera versión funcional como tr
 | SLF4J + Logback | 2.0 / 1.5 | Logging estructurado |
 | JUnit 5 | 5.11 | Tests unitarios e integración |
 | Mockito | 5.12 | Mocks para tests unitarios de servicios |
+| Spring Boot | 3.3.4 | API REST (mismo dominio que la UI JavaFX) |
+| SpringDoc / Swagger UI | 2.6 | Documentación interactiva de la API |
 | JaCoCo | 0.8.12 | Cobertura de código (umbral ≥ 70 %) |
 | Maven | 3.x | Gestión de dependencias y ciclo de vida |
 
@@ -85,12 +88,37 @@ Las capas internas no conocen las externas: el dominio y los servicios son indep
 └─────────────────────────────────────────────┘
 ```
 
+El mismo diagrama con la API REST añadida:
+
+```
+┌─────────────────────────────────────────────┐
+│  UI  (app.ui.panels.*, AdminWindow…)        │  JavaFX — consume servicios
+├─────────────────────────────────────────────┤
+│  API REST  (app.api.controller.*)           │  Spring Boot — consume los MISMOS servicios
+└──────────────────┬──────────────────────────┘
+                   │ usa
+┌──────────────────▼──────────────────────────┐
+│  Services  (app.service.*)                  │  Sin anotaciones Spring ni JavaFX
+└──────────────────┬──────────────────────────┘
+                   │ implementa
+┌──────────────────▼──────────────────────────┐
+│  Domain  (com.pharmacyfm.domain.*)          │  ← Sin dependencias externas
+│    model/   records + enums inmutables      │
+│    port/    interfaces tecnología-agnósticas│
+└──────────────────▲──────────────────────────┘
+                   │ adaptadores
+┌──────────────────┴──────────────────────────┐
+│  Infrastructure  (…infrastructure.*)        │  JDBC + SQLite
+└─────────────────────────────────────────────┘
+```
+
 **Decisiones de diseño clave:**
 
 - `domain` — Java records inmutables (`Formula`, `Paciente`, `Pedido`), enums tipados (`Role`, `EstadoPedido`), interfaces de puerto. Cero imports de terceros.
-- `service` — lógica de negocio con validaciones. Inyección por constructor desde `AppContext` (composition root). Única dependencia externa: SLF4J API (facade, sin implementación).
+- `service` — lógica de negocio con validaciones. Inyección por constructor desde `AppContext` (para JavaFX) o `SpringApiConfig` (para Spring Boot). Sin anotaciones de framework en ninguna clase de servicio.
 - `infrastructure` — adaptadores JDBC con `Supplier<Connection>` inyectable para tests de integración con SQLite en archivo temporal.
 - `ui` — paneles JavaFX desacoplados. Lambda cell value factories en lugar de `PropertyValueFactory`, compatible con records Java.
+- `api` — controladores REST (Spring Boot). El composition root `SpringApiConfig` cablea los mismos repos y servicios sin modificar ninguno.
 
 ---
 
@@ -122,22 +150,36 @@ Configuración: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ---
 
+## API REST
+
+El mismo dominio y servicios expuestos como REST API con documentación interactiva.
+
+```bash
+mvn spring-boot:run
+```
+
+| Recurso | Métodos |
+|---|---|
+| `/api/formulas` | GET, POST, PUT /{id}, DELETE /{id} |
+| `/api/pedidos` | GET, GET /paciente/{id}, POST /catalogo, POST /personalizado, PATCH /{id}/estado |
+| `/api/pacientes` | GET, PUT /{id} |
+
+**Swagger UI:** `http://localhost:8080/swagger-ui.html`  
+**OpenAPI JSON:** `http://localhost:8080/api-docs`
+
+---
+
 ## Instalación y ejecución
 
 ### Requisitos
 - Java 23+
 - Maven 3.x
 
-### Pasos
+### Aplicación de escritorio (JavaFX)
 
 ```bash
-# 1. Clona el repositorio
 git clone https://github.com/PabloBoteroCardona/PharmacyFM.git
-
-# 2. Entra en el directorio
 cd PharmacyFM
-
-# 3. Ejecuta con Maven
 mvn javafx:run
 ```
 
@@ -146,34 +188,71 @@ La base de datos se crea automáticamente en `~/.pharmacyfm/farmacia.db` en el p
 **Credenciales por defecto:**
 - Email: `admin` | Contraseña: `admin`
 
+### API REST (Spring Boot)
+
+```bash
+mvn spring-boot:run
+# Swagger UI en http://localhost:8080/swagger-ui.html
+```
+
 ---
 
 ## Estructura del proyecto
 
 ```
 PharmacyFM/
-├── .github/workflows/ci.yml          ← Pipeline CI (GitHub Actions)
+├── .github/
+│   └── workflows/
+│       └── ci.yml                         ← Pipeline CI (GitHub Actions)
+├── database/
+│   └── schema.sql                         ← DDL de SQLite (referencia)
+├── docs/screenshots/                      ← Capturas de pantalla
 ├── src/
-│   ├── main/java/
-│   │   ├── app/
-│   │   │   ├── service/              ← Casos de uso (FormulaService, PedidoService…)
-│   │   │   ├── ui/
-│   │   │   │   ├── AlertHelper.java  ← Utilidad de diálogos compartida
-│   │   │   │   └── panels/           ← Paneles JavaFX (PedidosPanel, FormulasPanel…)
-│   │   │   ├── AppContext.java       ← Composition root (cableado de dependencias)
-│   │   │   ├── AdminWindow.java
-│   │   │   ├── UserWindow.java
-│   │   │   └── LoginScreen.java
-│   │   └── com/pharmacyfm/
-│   │       ├── domain/
-│   │       │   ├── model/            ← Records + enums (Formula, Pedido, EstadoPedido…)
-│   │       │   └── port/             ← Interfaces de repositorio (FormulaRepository…)
-│   │       └── infrastructure/
-│   │           └── persistence/      ← Adaptadores JDBC (JdbcFormulaRepository…)
-│   ├── main/resources/
-│   │   ├── logback.xml
-│   │   └── styles.css
-│   └── test/java/                    ← 65 tests (unitarios + integración)
+│   ├── main/
+│   │   ├── java/
+│   │   │   ├── app/
+│   │   │   │   ├── api/
+│   │   │   │   │   ├── controller/        ← FormulasController, PedidosController, PacientesController
+│   │   │   │   │   ├── dto/               ← PedidoCatalogoRequest, PedidoPersonalizadoRequest, EstadoRequest
+│   │   │   │   │   ├── MainApiApp.java    ← Punto de entrada Spring Boot
+│   │   │   │   │   └── SpringApiConfig.java ← Composition root (cableado de beans Spring)
+│   │   │   │   ├── service/
+│   │   │   │   │   ├── FormulaService.java
+│   │   │   │   │   ├── PacienteService.java
+│   │   │   │   │   ├── PedidoService.java
+│   │   │   │   │   └── AuthService.java
+│   │   │   │   ├── ui/
+│   │   │   │   │   ├── AlertHelper.java   ← Utilidad de diálogos compartida
+│   │   │   │   │   └── panels/
+│   │   │   │   │       ├── FormulasPanel.java
+│   │   │   │   │       ├── PedidosPanel.java
+│   │   │   │   │       ├── PacientesPanel.java
+│   │   │   │   │       ├── SolicitarPedidoPanel.java
+│   │   │   │   │       └── MisPedidosPanel.java
+│   │   │   │   ├── AdminWindow.java
+│   │   │   │   ├── UserWindow.java
+│   │   │   │   ├── LoginScreen.java
+│   │   │   │   ├── AppContext.java        ← Composition root JavaFX
+│   │   │   │   ├── MainApp.java           ← Punto de entrada JavaFX
+│   │   │   │   ├── Database.java
+│   │   │   │   └── DatabaseConnection.java
+│   │   │   └── com/pharmacyfm/
+│   │   │       ├── domain/
+│   │   │       │   ├── model/             ← Formula, Paciente, Pedido (records), Role, EstadoPedido (enums)
+│   │   │       │   └── port/              ← FormulaRepository, PedidoRepository, PacienteRepository, UserRepository
+│   │   │       └── infrastructure/
+│   │   │           └── persistence/       ← JdbcFormulaRepository, JdbcPedidoRepository, JdbcPacienteRepository…
+│   │   └── resources/
+│   │       ├── application.properties     ← Configuración Spring Boot
+│   │       ├── logback.xml
+│   │       └── styles.css
+│   └── test/
+│       └── java/
+│           ├── app/service/               ← FormulaServiceTest, PedidoServiceTest, PacienteServiceTest
+│           └── com/pharmacyfm/
+│               ├── domain/model/          ← FormulaTest, PedidoTest, PacienteTest, RoleTest…
+│               └── infrastructure/        ← JdbcFormulaRepositoryTest, JdbcPedidoRepositoryTest, InMemoryDb
+├── Procfile                               ← Despliegue en Railway
 └── pom.xml
 ```
 
