@@ -4,6 +4,8 @@ Proyecto de fin de grado DAM — app de escritorio para farmacias.
 La idea surgió de un vacío real detectado tras años de experiencia en el sector de la salud: las farmacias no disponen de una herramienta sencilla para gestionar 
 fórmulas magistrales, controlar la trazabilidad de los pedidos y mantener el contacto con sus pacientes desde una misma aplicación.
 
+![CI](https://github.com/PabloBoteroCardona/PharmacyFM/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/Cobertura-≥70%25-brightgreen?style=flat-square)
 ![Java](https://img.shields.io/badge/Java-23-orange?style=flat-square&logo=java)
 ![JavaFX](https://img.shields.io/badge/JavaFX-23-blue?style=flat-square)
 ![SQLite](https://img.shields.io/badge/SQLite-3.45-lightgrey?style=flat-square&logo=sqlite)
@@ -56,19 +58,24 @@ fórmulas magistrales, controlar la trazabilidad de los pedidos y mantener el co
 
 ## Arquitectura
 
-El proyecto sigue una arquitectura en tres capas que separa responsabilidades:
+El proyecto sigue **Clean Architecture** con regla de dependencia estricta:
 
 ```
-UI (LoginScreen, AdminWindow, UserWindow)
-        ↓
-Servicios (AuthService, PedidoService, FormulaService)
-        ↓
-Repositorios (UsuarioRepository, PacienteRepository, FormulaRepository, PedidoRepository)
-        ↓
-Base de datos (DatabaseConnection → SQLite)
+UI  (app.ui.panels.*, AdminWindow, UserWindow)
+        ↓  solo consume servicios, nunca repositorios
+Services  (app.service.*)  ←  lógica de negocio, constructor injection
+        ↓  usa interfaces del dominio
+Domain Ports  (com.pharmacyfm.domain.port.*)  ←  contratos tecnología-agnósticos
+        ↑  implementados por
+Infrastructure  (com.pharmacyfm.infrastructure.persistence.*)  ←  JDBC + SQLite
 ```
 
-Principios aplicados: **Responsabilidad única (SOLID)**, **DRY**, **patrón DAO/Repository**.
+- **`domain`** — records inmutables (`Formula`, `Paciente`, `Pedido`), enums tipados (`Role`, `EstadoPedido`), interfaces de puerto. Sin dependencias externas.
+- **`service`** — casos de uso, inyección por constructor desde `AppContext` (composition root).
+- **`infrastructure`** — adaptadores JDBC con `Supplier<Connection>` inyectable para tests de integración.
+- **`ui`** — paneles JavaFX con lambdas en cell value factories (sin `PropertyValueFactory`).
+
+Principios aplicados: **Regla de dependencia (Clean Architecture)**, **SOLID**, **Conventional Commits**.
 
 ---
 
