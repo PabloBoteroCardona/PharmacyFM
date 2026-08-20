@@ -10,6 +10,7 @@ El proyecto se desarrolló en dos etapas: una primera versión funcional como tr
 ![Java](https://img.shields.io/badge/Java-23-orange?style=flat-square&logo=openjdk)
 ![JavaFX](https://img.shields.io/badge/JavaFX-23-blue?style=flat-square)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-brightgreen?style=flat-square&logo=springboot)
+![Cloud Run](https://img.shields.io/badge/Cloud_Run-deployed-4285F4?style=flat-square&logo=googlecloud)
 ![SQLite](https://img.shields.io/badge/SQLite-3.45-lightgrey?style=flat-square&logo=sqlite)
 ![Maven](https://img.shields.io/badge/Maven-3.x-red?style=flat-square&logo=apachemaven)
 
@@ -164,8 +165,14 @@ mvn spring-boot:run
 | `/api/pedidos` | GET, GET /paciente/{id}, POST /catalogo, POST /personalizado, PATCH /{id}/estado |
 | `/api/pacientes` | GET, PUT /{id} |
 
-**Swagger UI:** `http://localhost:8080/swagger-ui.html`  
-**OpenAPI JSON:** `http://localhost:8080/api-docs`
+**API en producción (Google Cloud Run):**
+`https://pharmacyfm-api-37174754720.europe-west1.run.app`
+
+**Swagger UI:** `https://pharmacyfm-api-37174754720.europe-west1.run.app/swagger-ui.html`  
+**OpenAPI JSON:** `https://pharmacyfm-api-37174754720.europe-west1.run.app/api-docs`
+
+> La base de datos SQLite se inicializa vacía en cada despliegue (almacenamiento efímero de Cloud Run).
+> En un entorno de producción real se sustituiría el adaptador JDBC por Cloud SQL — los servicios no cambiarían.
 
 ---
 
