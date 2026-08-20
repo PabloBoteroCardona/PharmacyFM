@@ -18,10 +18,10 @@ class FormulaTest {
     void constructor_completo_inicializaCampos() {
         Formula f = new Formula(5, "Crema hidratante", "Urea al 10%", 18.50);
 
-        assertEquals(5,                  f.getId());
-        assertEquals("Crema hidratante", f.getNombre());
-        assertEquals("Urea al 10%",      f.getDescripcion());
-        assertEquals(18.50,              f.getPrecio(), 0.001);
+        assertEquals(5,                  f.id());
+        assertEquals("Crema hidratante", f.nombre());
+        assertEquals("Urea al 10%",      f.descripcion());
+        assertEquals(18.50,              f.precio(), 0.001);
     }
 
     @Test
@@ -29,7 +29,7 @@ class FormulaTest {
     void constructor_sinId_esNueva() {
         Formula nueva = new Formula("Gel antiinflamatorio", "Ibuprofeno 5%", 15.75);
 
-        assertEquals(0, nueva.getId());
+        assertEquals(0, nueva.id());
         assertTrue(nueva.isNew());
     }
 

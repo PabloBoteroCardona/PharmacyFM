@@ -102,9 +102,9 @@ public class JdbcFormulaRepository implements FormulaRepository {
         try (Connection conn = getConn();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            stmt.setString(1, f.getNombre());
-            stmt.setString(2, f.getDescripcion());
-            stmt.setDouble(3, f.getPrecio());
+            stmt.setString(1, f.nombre());
+            stmt.setString(2, f.descripcion());
+            stmt.setDouble(3, f.precio());
             stmt.executeUpdate();
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -130,10 +130,10 @@ public class JdbcFormulaRepository implements FormulaRepository {
         try (Connection conn = getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, f.getNombre());
-            stmt.setString(2, f.getDescripcion());
-            stmt.setDouble(3, f.getPrecio());
-            stmt.setInt(4, f.getId());
+            stmt.setString(1, f.nombre());
+            stmt.setString(2, f.descripcion());
+            stmt.setDouble(3, f.precio());
+            stmt.setInt(4, f.id());
 
             return stmt.executeUpdate() > 0;
 

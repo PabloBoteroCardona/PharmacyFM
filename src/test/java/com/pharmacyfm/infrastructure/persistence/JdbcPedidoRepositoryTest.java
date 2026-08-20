@@ -65,7 +65,7 @@ class JdbcPedidoRepositoryTest {
 
         List<Pedido> lista = repo.findByPacienteId(idPacientePrueba);
         assertEquals(1, lista.size(), "Debe haberse creado 1 pedido");
-        assertEquals(EstadoPedido.PENDIENTE, lista.get(0).getEstadoPedido(),
+        assertEquals(EstadoPedido.PENDIENTE, lista.get(0).estado(),
                 "El estado inicial siempre es PENDIENTE");
     }
 
@@ -75,7 +75,7 @@ class JdbcPedidoRepositoryTest {
         repo.insert(idPacientePrueba, null, "Solución oral", 1, "Mililitros", "");
 
         List<Pedido> lista = repo.findByPacienteId(idPacientePrueba);
-        int idPedido = lista.get(0).getId();
+        int idPedido = lista.get(0).id();
 
         // Avanzamos el estado en el flujo de trabajo
         boolean ok = repo.updateEstado(idPedido, EstadoPedido.EN_PREPARACION.getLabel());
@@ -83,7 +83,7 @@ class JdbcPedidoRepositoryTest {
         assertTrue(ok, "La actualización de estado debe devolver true");
 
         List<Pedido> tras = repo.findByPacienteId(idPacientePrueba);
-        assertEquals(EstadoPedido.EN_PREPARACION, tras.get(0).getEstadoPedido());
+        assertEquals(EstadoPedido.EN_PREPARACION, tras.get(0).estado());
     }
 
     @Test
@@ -105,7 +105,7 @@ class JdbcPedidoRepositoryTest {
 
         List<Pedido> lista = repo.findByPacienteId(idPacientePrueba);
 
-        assertEquals("Melatonina 1mg", lista.get(0).getNombreFormula(),
+        assertEquals("Melatonina 1mg", lista.get(0).nombreFormula(),
                 "El nombre personalizado debe recuperarse íntegro");
     }
 

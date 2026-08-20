@@ -59,14 +59,14 @@ public class FormulaService {
      */
     public boolean guardarFormula(Formula f) {
         // Validación de nombre obligatorio
-        if (f.getNombre() == null || f.getNombre().trim().isEmpty()) {
+        if (f.nombre() == null || f.nombre().trim().isEmpty()) {
             log.warn("Intento de guardar fórmula con nombre vacío");
             return false;
         }
 
         // Validación de precio no negativo (0 es válido para fórmulas sin coste)
-        if (f.getPrecio() < 0) {
-            log.warn("Intento de guardar fórmula con precio negativo: {}", f.getPrecio());
+        if (f.precio() < 0) {
+            log.warn("Intento de guardar fórmula con precio negativo: {}", f.precio());
             return false;
         }
 
@@ -75,12 +75,12 @@ public class FormulaService {
             int id = formulaRepository.insert(f);
             boolean ok = id > 0;
             if (ok) log.info("Fórmula insertada con id={}", id);
-            else    log.error("Error al insertar fórmula '{}'", f.getNombre());
+            else    log.error("Error al insertar fórmula '{}'", f.nombre());
             return ok;
         } else {
             boolean ok = formulaRepository.update(f);
-            if (ok) log.info("Fórmula actualizada, id={}", f.getId());
-            else    log.warn("No se encontró la fórmula a actualizar, id={}", f.getId());
+            if (ok) log.info("Fórmula actualizada, id={}", f.id());
+            else    log.warn("No se encontró la fórmula a actualizar, id={}", f.id());
             return ok;
         }
     }

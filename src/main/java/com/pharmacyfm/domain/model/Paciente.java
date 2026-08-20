@@ -1,55 +1,43 @@
 package com.pharmacyfm.domain.model;
 
 /**
- * Modelo de dominio que representa la ficha de un paciente registrado.
+ * Modelo de dominio que representa el perfil de un paciente.
  *
- * Diseñada como clase inmutable: todos los campos son final y no hay setters.
- * Las actualizaciones de datos personales se realizan mediante métodos 'with*'
- * que devuelven una nueva instancia con el campo modificado, manteniendo el
- * objeto original intacto hasta que el cambio se confirme en la base de datos.
+ * Modelado como Java record: todos los campos son inmutables.
+ * Accesores generados: id(), idUsuario(), nombre(), telefono(), email()
  *
- * Se mantiene como clase (en lugar de record) para mantener compatibilidad
- * con PropertyValueFactory de JavaFX en la tabla de pacientes.
+ * Los métodos with* devuelven una nueva instancia con el campo modificado,
+ * preservando la inmutabilidad del modelo (patrón copy-and-update).
  */
-public final class Paciente {
-
-    private final int id;
-    private final int idUsuario;   // Clave foránea hacia la tabla 'usuarios'
-    private final String nombre;
-    private final String telefono;
-    private final String email;
+public record Paciente(int id, int idUsuario, String nombre, String telefono, String email) {
 
     /**
-     * Constructor completo, utilizado principalmente por el repositorio
-     * al mapear filas de la base de datos.
+     * Devuelve una copia del paciente con el nombre actualizado.
+     *
+     * @param nuevoNombre Nuevo nombre a asignar.
+     * @return Nueva instancia de Paciente con el nombre cambiado.
      */
-    public Paciente(int id, int idUsuario, String nombre, String telefono, String email) {
-        this.id = id;
-        this.idUsuario = idUsuario;
-        this.nombre = nombre;
-        this.telefono = telefono;
-        this.email = email;
+    public Paciente withNombre(String nuevoNombre) {
+        return new Paciente(id, idUsuario, nuevoNombre, telefono, email);
     }
 
-    public int getId()          { return id; }
-    public int getIdUsuario()   { return idUsuario; }
-    public String getNombre()   { return nombre; }
-    public String getTelefono() { return telefono; }
-    public String getEmail()    { return email; }
-
-    // ---- Métodos 'with' para actualizaciones inmutables ----
-    // En lugar de mutar el objeto, devuelven una copia con el campo cambiado.
-    // El objeto original permanece válido hasta que la operación de BD confirme el cambio.
-
-    public Paciente withNombre(String nombre) {
-        return new Paciente(id, idUsuario, nombre, telefono, email);
+    /**
+     * Devuelve una copia del paciente con el teléfono actualizado.
+     *
+     * @param nuevoTelefono Nuevo número de teléfono.
+     * @return Nueva instancia de Paciente con el teléfono cambiado.
+     */
+    public Paciente withTelefono(String nuevoTelefono) {
+        return new Paciente(id, idUsuario, nombre, nuevoTelefono, email);
     }
 
-    public Paciente withTelefono(String telefono) {
-        return new Paciente(id, idUsuario, nombre, telefono, email);
-    }
-
-    public Paciente withEmail(String email) {
-        return new Paciente(id, idUsuario, nombre, telefono, email);
+    /**
+     * Devuelve una copia del paciente con el email actualizado.
+     *
+     * @param nuevoEmail Nueva dirección de correo electrónico.
+     * @return Nueva instancia de Paciente con el email cambiado.
+     */
+    public Paciente withEmail(String nuevoEmail) {
+        return new Paciente(id, idUsuario, nombre, telefono, nuevoEmail);
     }
 }

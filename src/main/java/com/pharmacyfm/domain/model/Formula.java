@@ -3,56 +3,43 @@ package com.pharmacyfm.domain.model;
 /**
  * Modelo de dominio que representa una fórmula magistral del catálogo.
  *
- * Diseñada como clase inmutable (todos los campos son final y no hay setters).
- * Para "editar" una fórmula, la capa de UI crea una nueva instancia con los
- * valores actualizados y la pasa al servicio — nunca se muta el objeto en memoria.
+ * Modelada como Java record: todos los campos son inmutables y los accesores
+ * siguen la convención de records (sin prefijo "get"): id(), nombre(), etc.
  *
- * Se mantiene como clase (en lugar de record) para conservar los métodos
- * 'getNombre()', 'getPrecio()'… con prefijo 'get', requeridos por
- * PropertyValueFactory de JavaFX. En F4 se migrará a lambdas y podrá
- * convertirse a record.
+ * Constructor canónico: Formula(int id, String nombre, String descripcion, double precio)
+ * Constructor de conveniencia: Formula(String nombre, String descripcion, double precio)
+ *   → crea una fórmula nueva con id = 0 (todavía no persistida).
+ *
+ * toString() devuelve el nombre para que el ComboBox de selección lo muestre correctamente.
  */
-public final class Formula {
-
-    private final int id;
-    private final String nombre;
-    private final String descripcion;
-    private final double precio;
+public record Formula(int id, String nombre, String descripcion, double precio) {
 
     /**
-     * Constructor principal para fórmulas recuperadas de la base de datos.
+     * Constructor de conveniencia para fórmulas nuevas antes de ser persistidas.
+     * El ID se fija a 0; la BD asigna el ID definitivo al insertarse.
      *
-     * @param id          Identificador único autoincremental.
-     * @param nombre      Nombre del preparado magistral.
-     * @param descripcion Descripción y composición.
-     * @param precio      Precio de venta al público.
-     */
-    public Formula(int id, String nombre, String descripcion, double precio) {
-        this.id = id;
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.precio = precio;
-    }
-
-    /**
-     * Constructor de conveniencia para nuevas fórmulas aún sin persistir.
-     * El id se fija a 0, que actúa como centinela de "nueva entidad".
+     * @param nombre      Nombre de la fórmula magistral.
+     * @param descripcion Descripción de sus componentes o uso.
+     * @param precio      Precio de venta (0 o positivo).
      */
     public Formula(String nombre, String descripcion, double precio) {
         this(0, nombre, descripcion, precio);
     }
 
-    public int getId()             { return id; }
-    public String getNombre()      { return nombre; }
-    public String getDescripcion() { return descripcion; }
-    public double getPrecio()      { return precio; }
-
-    /** Retorna true si la fórmula no ha sido persistida todavía (id == 0). */
-    public boolean isNew() { return id == 0; }
+    /**
+     * Indica si la fórmula aún no ha sido persistida en la base de datos.
+     * Una fórmula es "nueva" cuando su ID es 0, es decir, cuando la BD
+     * todavía no le ha asignado un identificador.
+     *
+     * @return true si id == 0 (no persistida), false si id > 0 (existe en BD).
+     */
+    public boolean isNew() {
+        return id == 0;
+    }
 
     /**
-     * Representación textual usada por los ComboBox de JavaFX para mostrar
-     * el nombre de la fórmula en las listas desplegables.
+     * Devuelve el nombre de la fórmula como representación textual.
+     * JavaFX usa toString() para mostrar los elementos en un ComboBox.
      */
     @Override
     public String toString() {

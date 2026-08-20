@@ -80,7 +80,7 @@ class PacienteServiceTest {
         Optional<Paciente> resultado = pacienteService.getPacientePorUsuario(20);
 
         assertTrue(resultado.isPresent(), "El Optional debe contener un paciente");
-        assertEquals("María Ruiz", resultado.get().getNombre());
+        assertEquals("María Ruiz", resultado.get().nombre());
     }
 
     @Test

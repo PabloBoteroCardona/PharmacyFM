@@ -126,10 +126,10 @@ public class JdbcPacienteRepository implements PacienteRepository {
         try (Connection conn = getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, p.getNombre());
-            stmt.setString(2, p.getTelefono());
-            stmt.setString(3, p.getEmail());
-            stmt.setInt(4, p.getId());
+            stmt.setString(1, p.nombre());
+            stmt.setString(2, p.telefono());
+            stmt.setString(3, p.email());
+            stmt.setInt(4, p.id());
 
             return stmt.executeUpdate() > 0;
 

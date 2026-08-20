@@ -71,20 +71,20 @@ public class PacienteService {
      * @return true si la actualización fue exitosa.
      */
     public boolean actualizarPaciente(Paciente p) {
-        if (p.getId() <= 0) {
-            log.warn("Intento de actualizar paciente con ID inválido: {}", p.getId());
+        if (p.id() <= 0) {
+            log.warn("Intento de actualizar paciente con ID inválido: {}", p.id());
             return false;
         }
-        if (p.getNombre() == null || p.getNombre().trim().isEmpty()) {
-            log.warn("Intento de actualizar paciente con nombre vacío, id={}", p.getId());
+        if (p.nombre() == null || p.nombre().trim().isEmpty()) {
+            log.warn("Intento de actualizar paciente con nombre vacío, id={}", p.id());
             return false;
         }
 
         boolean ok = pacienteRepository.update(p);
         if (ok) {
-            log.info("Paciente actualizado correctamente, id={}", p.getId());
+            log.info("Paciente actualizado correctamente, id={}", p.id());
         } else {
-            log.warn("No se encontró el paciente a actualizar, id={}", p.getId());
+            log.warn("No se encontró el paciente a actualizar, id={}", p.id());
         }
         return ok;
     }

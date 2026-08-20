@@ -75,9 +75,9 @@ class JdbcFormulaRepositoryTest {
 
         assertEquals(1, lista.size(), "Debe haber exactamente una fórmula");
         Formula recuperada = lista.get(0);
-        assertEquals("Gel antiséptico", recuperada.getNombre());
-        assertEquals("Alcohol 70% con glicerina", recuperada.getDescripcion());
-        assertEquals(8.00, recuperada.getPrecio(), 0.001);
+        assertEquals("Gel antiséptico", recuperada.nombre());
+        assertEquals("Alcohol 70% con glicerina", recuperada.descripcion());
+        assertEquals(8.00, recuperada.precio(), 0.001);
     }
 
     @Test
@@ -95,8 +95,8 @@ class JdbcFormulaRepositoryTest {
         // Verificamos que los nuevos datos se almacenaron
         List<Formula> lista = repo.findAll();
         assertEquals(1, lista.size());
-        assertEquals("Pomada base enriquecida", lista.get(0).getNombre());
-        assertEquals(7.50, lista.get(0).getPrecio(), 0.001);
+        assertEquals("Pomada base enriquecida", lista.get(0).nombre());
+        assertEquals(7.50, lista.get(0).precio(), 0.001);
     }
 
     @Test

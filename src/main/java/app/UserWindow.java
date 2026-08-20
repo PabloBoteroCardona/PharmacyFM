@@ -1,51 +1,48 @@
 package app;
 
-import app.service.FormulaService;
 import app.service.PacienteService;
-import app.service.PedidoService;
-import com.pharmacyfm.domain.model.Formula;
+import app.ui.AlertHelper;
+import app.ui.panels.MisPedidosPanel;
+import app.ui.panels.SolicitarPedidoPanel;
 import com.pharmacyfm.domain.model.Paciente;
-import com.pharmacyfm.domain.model.Pedido;
 import com.pharmacyfm.domain.model.User;
-import java.util.List;
+
 import java.util.Optional;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 /**
- * Clase responsable de la interfaz de usuario para el rol Paciente.
- * Permite la solicitud de fórmulas magistrales y el seguimiento de pedidos personales.
+ * Ventana del área privada del paciente.
+ *
+ * Actúa como cáscara de navegación: resuelve el perfil de paciente
+ * del usuario autenticado y monta las pestañas de solicitud y seguimiento.
+ * Toda la lógica de cada sección vive en su panel correspondiente
+ * (SolicitarPedidoPanel, MisPedidosPanel).
  */
 public class UserWindow {
 
-    // Servicios obtenidos de la raíz de composición (nunca instanciados aquí directamente)
+    /** Servicio de pacientes — necesario para resolver el perfil antes de montar la UI. */
     private static final PacienteService pacienteService = AppContext.get().pacienteService();
-    private static final FormulaService  formulaService  = AppContext.get().formulaService();
-    private static final PedidoService   pedidoService   = AppContext.get().pedidoService();
-
-    private static String getCss() {
-        return UserWindow.class.getResource("/styles.css").toExternalForm();
-    }
 
     /**
-     * Configura y despliega el área privada del paciente.
-     * @param stage Escenario principal.
-     * @param user Usuario autenticado.
+     * Configura y despliega el área de paciente en el escenario dado.
+     * Si el usuario no tiene perfil de paciente se muestra una alerta
+     * y se redirige a la pantalla de inicio de sesión.
+     *
+     * @param stage Escenario principal de la aplicación.
+     * @param user  Usuario paciente autenticado.
      */
     public static void show(Stage stage, User user) {
 
-        // Buscamos el perfil de paciente usando el servicio (devuelve Optional para evitar null)
+        // Resolvemos el perfil de paciente antes de construir la UI
         Optional<Paciente> optPaciente = pacienteService.getPacientePorUsuario(user.id());
         if (optPaciente.isEmpty()) {
-            mostrarAlerta("No se ha encontrado la ficha de paciente asociada a este usuario.");
+            AlertHelper.mostrarAlerta(
+                    "No se ha encontrado la ficha de paciente asociada a este usuario.");
             LoginScreen.show(stage);
             return;
         }
@@ -53,8 +50,8 @@ public class UserWindow {
 
         BorderPane root = new BorderPane();
 
-        // ---- Header personalizado ----
-        // Usamos el nombre si existe, o el email como fallback para el saludo
+        // ---- Encabezado personalizado ----
+        // Usamos el nombre si existe, o el email como fallback
         String nombre = (user.nombre() != null && !user.nombre().isEmpty())
                 ? user.nombre() : user.email();
 
@@ -73,227 +70,25 @@ public class UserWindow {
         topBar.setAlignment(Pos.CENTER_LEFT);
         root.setTop(topBar);
 
-        // ---- Navegación por pestañas ----
+        // ---- Pestañas de navegación — el contenido lo construye cada panel ----
         TabPane tabPane = new TabPane();
 
         Tab tabSolicitar = new Tab("Solicitar pedido");
         tabSolicitar.setClosable(false);
-        tabSolicitar.setContent(createSolicitarPedidoContent(paciente));
+        tabSolicitar.setContent(SolicitarPedidoPanel.build(paciente));
 
         Tab tabMisPedidos = new Tab("Mis pedidos");
         tabMisPedidos.setClosable(false);
-        tabMisPedidos.setContent(createMisPedidosContent(paciente));
+        tabMisPedidos.setContent(MisPedidosPanel.build(paciente));
 
         tabPane.getTabs().addAll(tabSolicitar, tabMisPedidos);
         root.setCenter(tabPane);
 
         Scene scene = new Scene(root, 900, 600);
-        scene.getStylesheets().add(getCss());
+        scene.getStylesheets().add(
+                UserWindow.class.getResource("/styles.css").toExternalForm());
         stage.setTitle("PharmacyFM - Área de paciente");
         stage.setScene(scene);
         stage.show();
-    }
-
-    // =========================================================
-    // SECCIÓN: SOLICITAR PEDIDO
-    // =========================================================
-
-    /**
-     * Genera el formulario dinámico para realizar nuevas solicitudes.
-     */
-    private static VBox createSolicitarPedidoContent(Paciente paciente) {
-        VBox root = new VBox(10);
-        root.setPadding(new Insets(15));
-
-        Label title = new Label("Nueva solicitud de fórmula");
-        title.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
-
-        // Selección de tipo de fórmula mediante RadioButtons
-        RadioButton rbExistente    = new RadioButton("Seleccionar fórmula existente");
-        RadioButton rbPersonalizada = new RadioButton("Fórmula personalizada");
-
-        ToggleGroup grupo = new ToggleGroup();
-        rbExistente.setToggleGroup(grupo);
-        rbPersonalizada.setToggleGroup(grupo);
-        rbExistente.setSelected(true);
-
-        // Contenedor para fórmula de catálogo
-        Label lblFormulaExistente = new Label("Fórmula:");
-        ComboBox<Formula> cbFormulas = new ComboBox<>();
-        cbFormulas.setItems(FXCollections.observableArrayList(formulaService.getAllFormulas()));
-        cbFormulas.setMaxWidth(Double.MAX_VALUE);
-        VBox boxExistente = new VBox(5, lblFormulaExistente, cbFormulas);
-
-        // Contenedor para fórmula personalizada
-        Label lblFormulaPers = new Label("Nombre de la fórmula personalizada:");
-        TextField txtFormulaPers = new TextField();
-        VBox boxPers = new VBox(5, lblFormulaPers, txtFormulaPers);
-        boxPers.setDisable(true);
-
-        // Lógica de intercambio de campos según la opción seleccionada
-        rbExistente.setOnAction(_ -> {
-            boxExistente.setDisable(false);
-            boxPers.setDisable(true);
-        });
-
-        rbPersonalizada.setOnAction(_ -> {
-            boxExistente.setDisable(true);
-            boxPers.setDisable(false);
-        });
-
-        // Configuración de cantidad y unidades
-        Label lblCantidad = new Label("Cantidad:");
-        TextField txtCantidad = new TextField("1");
-        txtCantidad.setPrefWidth(80);
-
-        ComboBox<String> cbUnidades = new ComboBox<>();
-        cbUnidades.getItems().addAll("Unidades", "Cápsulas", "Gramos", "Mililitros", "Comprimidos");
-        cbUnidades.setValue("Unidades");
-
-        HBox hbCantidad = new HBox(10, txtCantidad, cbUnidades);
-        hbCantidad.setAlignment(Pos.CENTER_LEFT);
-
-        Label lblObs = new Label("Observaciones (ej. indicaciones del médico, aclaraciones):");
-        TextArea txtObs = new TextArea();
-        txtObs.setPrefRowCount(4);
-
-        Button btnEnviar = new Button("Enviar solicitud");
-        btnEnviar.getStyleClass().add("btn-primary");
-
-        // Procesamiento de la solicitud
-        btnEnviar.setOnAction(event -> {
-            if (event == null) return;
-
-            int cantidad;
-            try {
-                cantidad = Integer.parseInt(txtCantidad.getText().trim());
-            } catch (NumberFormatException ex) {
-                mostrarAlerta("La cantidad no es válida.");
-                return;
-            }
-            
-            if (cantidad <= 0) {
-                mostrarAlerta("La cantidad debe ser mayor que 0.");
-                return;
-            }
-
-            String unidad        = cbUnidades.getValue();
-            String observaciones = txtObs.getText().trim();
-            boolean ok;
-
-            // Delegación al servicio según el tipo de pedido
-            if (rbExistente.isSelected()) {
-                Formula sel = cbFormulas.getValue();
-                if (sel == null) {
-                    mostrarAlerta("Debes seleccionar una fórmula del listado.");
-                    return;
-                }
-                ok = pedidoService.crearPedidoFormulaCatalogo(
-                        paciente.getId(), sel.getId(), cantidad, unidad, observaciones);
-            } else {
-                String nombrePers = txtFormulaPers.getText().trim();
-                if (nombrePers.isEmpty()) {
-                    mostrarAlerta("Debes escribir el nombre de la fórmula personalizada.");
-                    return;
-                }
-                ok = pedidoService.crearPedidoFormulaPersonalizada(
-                        paciente.getId(), nombrePers, cantidad, unidad, observaciones);
-            }
-
-            // Feedback al usuario y limpieza del formulario tras el envío
-            if (ok) {
-                mostrarAlerta("Solicitud enviada correctamente.");
-                txtCantidad.setText("1");
-                cbUnidades.setValue("Unidades");
-                txtObs.clear();
-                txtFormulaPers.clear();
-                cbFormulas.getSelectionModel().clearSelection();
-                rbExistente.setSelected(true);
-                boxExistente.setDisable(false);
-                boxPers.setDisable(true);
-            } else {
-                mostrarAlerta("Error al enviar la solicitud.");
-            }
-        });
-
-        HBox opciones = new HBox(15, rbExistente, rbPersonalizada);
-        opciones.setAlignment(Pos.CENTER_LEFT);
-
-        root.getChildren().addAll(title, opciones, boxExistente, boxPers, lblCantidad, hbCantidad, lblObs, txtObs, btnEnviar);
-        return root;
-    }
-
-    // =========================================================
-    // SECCIÓN: SEGUIMIENTO DE PEDIDOS
-    // =========================================================
-
-    /**
-     * Crea la tabla para que el paciente consulte el estado de sus pedidos.
-     */
-    private static VBox createMisPedidosContent(Paciente paciente) {
-        VBox root = new VBox(10);
-        root.setPadding(new Insets(15));
-
-        Label title = new Label("Mis pedidos");
-        title.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
-
-        TableView<Pedido> table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-
-        // Mapeo de columnas con el modelo Pedido
-        TableColumn<Pedido, String> colFecha = new TableColumn<>("Fecha");
-        colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-
-        TableColumn<Pedido, String> colFormula = new TableColumn<>("Fórmula");
-        colFormula.setCellValueFactory(new PropertyValueFactory<>("nombreFormula"));
-
-        TableColumn<Pedido, String> colCantidad = new TableColumn<>("Cantidad");
-        colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidadConUnidad"));
-
-        TableColumn<Pedido, String> colEstado = new TableColumn<>("Estado");
-        colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
-
-        TableColumn<Pedido, String> colObs = new TableColumn<>("Observaciones");
-        colObs.setCellValueFactory(new PropertyValueFactory<>("observaciones"));
-
-     // Añadimos las columnas de forma individual para evitar warnings de tipos genéricos
-        table.getColumns().add(colFecha);
-        table.getColumns().add(colFormula);
-        table.getColumns().add(colCantidad);
-        table.getColumns().add(colEstado);
-        table.getColumns().add(colObs);
-
-        ObservableList<Pedido> data = FXCollections.observableArrayList();
-        cargarPedidosPaciente(data, paciente);
-        table.setItems(data);
-
-        Button btnRecargar = new Button("Actualizar");
-        btnRecargar.getStyleClass().add("btn-secondary");
-        btnRecargar.setOnAction(_ -> cargarPedidosPaciente(data, paciente));
-
-        root.getChildren().addAll(title, table, btnRecargar);
-        VBox.setVgrow(table, Priority.ALWAYS);
-
-        return root;
-    }
-
-    /**
-     * Consulta y carga en la lista observable los pedidos específicos del paciente.
-     */
-    private static void cargarPedidosPaciente(ObservableList<Pedido> data, Paciente paciente) {
-        data.clear();
-        List<Pedido> lista = pedidoService.getPedidosByPaciente(paciente.getId());
-        data.addAll(lista);
-    }
-
-    /**
-     * Centralización de diálogos informativos.
-     */
-    private static void mostrarAlerta(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Información");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
     }
 }
