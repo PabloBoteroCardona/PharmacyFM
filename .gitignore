@@ -27,3 +27,11 @@
 # ---- Archivos del sistema operativo ----
 .DS_Store
 Thumbs.db
+
+# ---- IDE: VS Code (configuración local de cada desarrollador) ----
+.vscode/
+
+# ---- Archivos de log generados en tiempo de ejecución ----
+*.log
+logs/
+
