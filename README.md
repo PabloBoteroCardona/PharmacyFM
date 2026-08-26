@@ -125,13 +125,13 @@ El mismo diagrama con la API REST añadida:
 
 ## Tests
 
-**65 tests** organizados en tres categorías:
+**79 tests** organizados en tres categorías:
 
 | Categoría | Tests | Herramienta |
 |---|---|---|
-| Dominio (records, enums) | 25 | JUnit 5 |
+| Dominio (records, enums) | 30 | JUnit 5 |
 | Servicios (casos de uso) | 23 | JUnit 5 + Mockito |
-| Integración JDBC (SQLite) | 12 + utilidades | JUnit 5 |
+| Integración JDBC (SQLite) | 26 + utilidades | JUnit 5 |
 
 La cobertura de instrucciones sobre dominio y servicios se verifica automáticamente con JaCoCo en cada `mvn verify` (umbral mínimo 70 %).
 
@@ -258,7 +258,8 @@ PharmacyFM/
 │           ├── app/service/               ← FormulaServiceTest, PedidoServiceTest, PacienteServiceTest
 │           └── com/pharmacyfm/
 │               ├── domain/model/          ← FormulaTest, PedidoTest, PacienteTest, RoleTest…
-│               └── infrastructure/        ← JdbcFormulaRepositoryTest, JdbcPedidoRepositoryTest, InMemoryDb
+│               └── infrastructure/        ← JdbcFormulaRepositoryTest, JdbcPedidoRepositoryTest,
+│                                              JdbcPacienteRepositoryTest, JdbcUserRepositoryTest, InMemoryDb
 ├── Procfile                               ← Despliegue en Railway
 └── pom.xml
 ```

@@ -4,6 +4,7 @@ import com.pharmacyfm.infrastructure.persistence.SqliteConnectionProvider;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -86,12 +87,14 @@ public class Database {
             // ---- Inserción del Administrador por defecto ----
             // Se utiliza BCrypt para el hashing de la contraseña por seguridad
             String adminHash = BCrypt.hashpw("admin", BCrypt.gensalt());
-            
+
             // Se usa INSERT OR IGNORE para evitar duplicados si la base de datos ya está inicializada
-            stmt.execute(
-                "INSERT OR IGNORE INTO usuarios (id, email, password, nombre, telefono, rol) " +
-                "VALUES (1, 'admin', '" + adminHash + "', 'Administrador', '', 'admin');"
-            );
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT OR IGNORE INTO usuarios (id, email, password, nombre, telefono, rol) " +
+                    "VALUES (1, 'admin', ?, 'Administrador', '', 'admin')")) {
+                ps.setString(1, adminHash);
+                ps.executeUpdate();
+            }
 
             System.out.println("Base de datos inicializada correctamente.");
         }

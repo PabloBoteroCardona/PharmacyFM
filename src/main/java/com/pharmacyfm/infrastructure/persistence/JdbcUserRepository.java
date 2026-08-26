@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Adaptador JDBC para el puerto UserRepository.
@@ -24,6 +25,31 @@ public class JdbcUserRepository implements UserRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JdbcUserRepository.class);
 
+    /** Factoría de conexiones. En producción usa SqliteConnectionProvider. */
+    private final Supplier<Connection> connectionFactory;
+
+    /** Constructor de producción: usa la BD real de SqliteConnectionProvider. */
+    public JdbcUserRepository() {
+        this(() -> {
+            try { return SqliteConnectionProvider.getConnection(); }
+            catch (SQLException e) { throw new RuntimeException(e); }
+        });
+    }
+
+    /** Constructor para tests: permite inyectar una conexión en memoria/archivo temporal. */
+    public JdbcUserRepository(Supplier<Connection> connectionFactory) {
+        this.connectionFactory = connectionFactory;
+    }
+
+    private Connection getConn() throws SQLException {
+        try {
+            return connectionFactory.get();
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof SQLException) throw (SQLException) e.getCause();
+            throw e;
+        }
+    }
+
     /**
      * {@inheritDoc}
      * Busca el usuario completo por email, mapeando 'rol' al enum Role.
@@ -32,7 +58,7 @@ public class JdbcUserRepository implements UserRepository {
     public Optional<User> findByEmail(String email) {
         String sql = "SELECT * FROM usuarios WHERE email = ?";
 
-        try (Connection conn = SqliteConnectionProvider.getConnection();
+        try (Connection conn = getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, email);
@@ -64,7 +90,7 @@ public class JdbcUserRepository implements UserRepository {
     public Optional<String> getPasswordHashByEmail(String email) {
         String sql = "SELECT password FROM usuarios WHERE email = ?";
 
-        try (Connection conn = SqliteConnectionProvider.getConnection();
+        try (Connection conn = getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, email);
@@ -89,7 +115,7 @@ public class JdbcUserRepository implements UserRepository {
     public boolean existsByEmail(String email) {
         String sql = "SELECT COUNT(*) FROM usuarios WHERE email = ?";
 
-        try (Connection conn = SqliteConnectionProvider.getConnection();
+        try (Connection conn = getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, email);
@@ -142,7 +168,7 @@ public class JdbcUserRepository implements UserRepository {
     public boolean updatePassword(String email, String passwordHash) {
         String sql = "UPDATE usuarios SET password = ? WHERE email = ?";
 
-        try (Connection conn = SqliteConnectionProvider.getConnection();
+        try (Connection conn = getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, passwordHash);
