@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.util.Optional;
 
 /**
  * Adaptador JDBC para el puerto UserRepository.
@@ -28,7 +29,7 @@ public class JdbcUserRepository implements UserRepository {
      * Busca el usuario completo por email, mapeando 'rol' al enum Role.
      */
     @Override
-    public User findByEmail(String email) {
+    public Optional<User> findByEmail(String email) {
         String sql = "SELECT * FROM usuarios WHERE email = ?";
 
         try (Connection conn = SqliteConnectionProvider.getConnection();
@@ -39,20 +40,20 @@ public class JdbcUserRepository implements UserRepository {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     // Convertimos la fila en un objeto de dominio inmutable
-                    return new User(
+                    return Optional.of(new User(
                             rs.getInt("id"),
                             rs.getString("email"),
                             rs.getString("nombre"),
                             rs.getString("telefono"),
                             Role.from(rs.getString("rol"))
-                    );
+                    ));
                 }
             }
 
         } catch (SQLException e) {
             log.error("[JdbcUserRepository] Error en findByEmail: {}", e.getMessage());
         }
-        return null;
+        return Optional.empty();
     }
 
     /**
@@ -60,7 +61,7 @@ public class JdbcUserRepository implements UserRepository {
      * Recupera solo el hash BCrypt para no cargar el User completo antes de validar.
      */
     @Override
-    public String getPasswordHashByEmail(String email) {
+    public Optional<String> getPasswordHashByEmail(String email) {
         String sql = "SELECT password FROM usuarios WHERE email = ?";
 
         try (Connection conn = SqliteConnectionProvider.getConnection();
@@ -70,14 +71,14 @@ public class JdbcUserRepository implements UserRepository {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getString("password");
+                    return Optional.ofNullable(rs.getString("password"));
                 }
             }
 
         } catch (SQLException e) {
             log.error("[JdbcUserRepository] Error en getPasswordHashByEmail: {}", e.getMessage());
         }
-        return null;
+        return Optional.empty();
     }
 
     /**

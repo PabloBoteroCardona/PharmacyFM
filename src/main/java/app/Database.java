@@ -1,5 +1,6 @@
 package app;
 
+import com.pharmacyfm.infrastructure.persistence.SqliteConnectionProvider;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
@@ -10,8 +11,8 @@ import java.sql.Statement;
  * Clase responsable de inicializar la base de datos.
  * Crea las tablas si no existen e inserta el usuario administrador por defecto.
  *
- * La gestión de conexiones está en DatabaseConnection.
- * Las operaciones CRUD están en los repositorios (app.repository).
+ * La gestión de conexiones está en SqliteConnectionProvider (infrastructure).
+ * Las operaciones CRUD están en los repositorios JDBC (infrastructure.persistence).
  */
 public class Database {
 
@@ -21,7 +22,7 @@ public class Database {
      */
     public static void initializeDatabase() throws SQLException {
         // Uso de try-with-resources para asegurar el cierre automático de la conexión y el statement
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = SqliteConnectionProvider.getConnection();
              Statement stmt = conn.createStatement()) {
 
             // Activación del soporte para claves foráneas en SQLite
@@ -59,7 +60,7 @@ public class Database {
                 "CREATE TABLE IF NOT EXISTS formulas (" +
                 " id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 " nombre TEXT NOT NULL," +
-                " descripción TEXT," +
+                " descripcion TEXT," +
                 " precio REAL" +
                 ");"
             );

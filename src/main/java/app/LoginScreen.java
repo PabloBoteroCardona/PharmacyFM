@@ -19,6 +19,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import java.util.Optional;
 
 /**
  * Clase responsable de la pantalla de autenticación.
@@ -107,17 +108,17 @@ public class LoginScreen {
                 return;
             }
 
-            User user = authService.login(email, pass);
-            if (user == null) {
+            Optional<User> user = authService.login(email, pass);
+            if (user.isEmpty()) {
                 lblError.setText("Email o contraseña incorrectos.");
                 return;
             }
 
             lblError.setText("");
-            if (user.role() == Role.ADMIN) {
-                AdminWindow.show(stage, user);
+            if (user.get().role() == Role.ADMIN) {
+                AdminWindow.show(stage, user.get());
             } else {
-                UserWindow.show(stage, user);
+                UserWindow.show(stage, user.get());
             }
         });
 

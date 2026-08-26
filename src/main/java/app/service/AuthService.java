@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 
 /**
  * Servicio de autenticación y gestión de cuentas de usuario.
@@ -53,28 +54,29 @@ public class AuthService {
      *
      * @param email    Dirección de correo del usuario.
      * @param password Contraseña en texto plano introducida en el formulario.
-     * @return El objeto User inmutable si las credenciales son correctas,
-     *         o null si el email no existe o la contraseña no coincide.
+     * @return Optional con el User si las credenciales son correctas,
+     *         o Optional.empty() si el email no existe o la contraseña no coincide.
      */
-    public User login(String email, String password) {
+    public Optional<User> login(String email, String password) {
         log.debug("Intento de login para email={}", email);
 
-        // Recuperamos solo el hash; si el email no existe, devolvemos null de inmediato
-        String hashGuardado = userRepository.getPasswordHashByEmail(email);
+        // Recuperamos solo el hash; si el email no existe, devolvemos vacío de inmediato
+        Optional<String> hashGuardado = userRepository.getPasswordHashByEmail(email);
 
-        if (hashGuardado == null) {
+        if (hashGuardado.isEmpty()) {
             log.warn("Login fallido: email no registrado={}", email);
-            return null;
+            return Optional.empty();
         }
 
         // BCrypt.checkpw compara la contraseña introducida contra el hash almacenado
-        if (!BCrypt.checkpw(password, hashGuardado)) {
+        if (!BCrypt.checkpw(password, hashGuardado.get())) {
             log.warn("Login fallido: contraseña incorrecta para email={}", email);
-            return null;
+            return Optional.empty();
         }
 
-        User user = userRepository.findByEmail(email);
-        log.info("Login exitoso para email={}, rol={}", email, user != null ? user.role() : "desconocido");
+        Optional<User> user = userRepository.findByEmail(email);
+        log.info("Login exitoso para email={}, rol={}", email,
+                user.map(u -> u.role().toString()).orElse("desconocido"));
         return user;
     }
 

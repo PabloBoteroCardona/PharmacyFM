@@ -4,6 +4,7 @@ import com.pharmacyfm.domain.model.User;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 
 /**
  * Puerto de salida (Output Port) para la persistencia de usuarios.
@@ -20,9 +21,9 @@ public interface UserRepository {
      * Busca y devuelve el usuario completo asociado a un email.
      *
      * @param email Email del usuario a buscar.
-     * @return Objeto User si existe; null si no se encuentra.
+     * @return Optional con el User si existe; Optional.empty() si no se encuentra.
      */
-    User findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
     /**
      * Obtiene el hash BCrypt de la contraseña almacenada para un email.
@@ -30,9 +31,9 @@ public interface UserRepository {
      * de verificar credenciales.
      *
      * @param email Email del usuario.
-     * @return Hash BCrypt, o null si el email no existe.
+     * @return Optional con el hash BCrypt, o Optional.empty() si el email no existe.
      */
-    String getPasswordHashByEmail(String email);
+    Optional<String> getPasswordHashByEmail(String email);
 
     /**
      * Comprueba si un email ya está registrado.

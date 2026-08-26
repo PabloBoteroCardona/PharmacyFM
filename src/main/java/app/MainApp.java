@@ -3,12 +3,16 @@ package app;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import atlantafx.base.theme.CupertinoLight;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Clase principal que actúa como punto de entrada de la aplicación (Entry Point).
  * Se encarga de la inicialización del sistema, la base de datos y el arranque de la interfaz.
  */
 public class MainApp extends Application {
+
+    private static final Logger log = LoggerFactory.getLogger(MainApp.class);
 
     /**
      * Método de inicio de la infraestructura de JavaFX.
@@ -33,9 +37,9 @@ public class MainApp extends Application {
             // Esto asegura que las tablas y el usuario administrador existan desde el primer segundo.
             Database.initializeDatabase();
         } catch (Exception e) {
-            // Manejo de excepciones críticas durante el arranque.
-            System.err.println("Error crítico al inicializar la base de datos:");
-            e.printStackTrace();
+            // Error crítico durante el arranque: se registra pero no se relanza,
+            // para permitir que la UI muestre su propio estado de error si aplica.
+            log.error("Error crítico al inicializar la base de datos", e);
         }
         
         // Lanzamiento del ciclo de vida de la aplicación JavaFX.
