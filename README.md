@@ -71,11 +71,11 @@ Las capas internas no conocen las externas: el dominio y los servicios son indep
 
 ```
 ┌─────────────────────────────────────────────┐
-│  UI  (app.ui.panels.*, AdminWindow…)        │  JavaFX — solo consume servicios
+│  UI  (com.pharmacyfm.ui.panels.*, …)        │  JavaFX — solo consume servicios
 └──────────────────┬──────────────────────────┘
                    │ usa
 ┌──────────────────▼──────────────────────────┐
-│  Services  (app.service.*)                  │  Casos de uso, constructor injection
+│  Services  (com.pharmacyfm.service.*)       │  Casos de uso, constructor injection
 └──────────────────┬──────────────────────────┘
                    │ implementa
 ┌──────────────────▼──────────────────────────┐
@@ -93,13 +93,13 @@ El mismo diagrama con la API REST añadida:
 
 ```
 ┌─────────────────────────────────────────────┐
-│  UI  (app.ui.panels.*, AdminWindow…)        │  JavaFX — consume servicios
+│  UI  (com.pharmacyfm.ui.panels.*, …)        │  JavaFX — consume servicios
 ├─────────────────────────────────────────────┤
-│  API REST  (app.api.controller.*)           │  Spring Boot — consume los MISMOS servicios
+│  API REST  (com.pharmacyfm.api.controller.*)│  Spring Boot — consume los MISMOS servicios
 └──────────────────┬──────────────────────────┘
                    │ usa
 ┌──────────────────▼──────────────────────────┐
-│  Services  (app.service.*)                  │  Sin anotaciones Spring ni JavaFX
+│  Services  (com.pharmacyfm.service.*)       │  Sin anotaciones Spring ni JavaFX
 └──────────────────┬──────────────────────────┘
                    │ implementa
 ┌──────────────────▼──────────────────────────┐
@@ -120,6 +120,8 @@ El mismo diagrama con la API REST añadida:
 - `infrastructure` — adaptadores JDBC con `Supplier<Connection>` inyectable para tests de integración con SQLite en archivo temporal.
 - `ui` — paneles JavaFX desacoplados. Lambda cell value factories en lugar de `PropertyValueFactory`, compatible con records Java.
 - `api` — controladores REST (Spring Boot). El composition root `SpringApiConfig` cablea los mismos repos y servicios sin modificar ninguno.
+
+Todo el código vive bajo un único namespace raíz (`com.pharmacyfm`), con una subcarpeta por capa (`ui`, `service`, `api`, `domain`, `infrastructure`) — sin paquetes sueltos fuera de esa convención.
 
 ---
 
@@ -216,49 +218,45 @@ PharmacyFM/
 ├── docs/screenshots/                      ← Capturas de pantalla
 ├── src/
 │   ├── main/
-│   │   ├── java/
-│   │   │   ├── app/
-│   │   │   │   ├── api/
-│   │   │   │   │   ├── controller/        ← FormulasController, PedidosController, PacientesController
-│   │   │   │   │   ├── dto/               ← PedidoCatalogoRequest, PedidoPersonalizadoRequest, EstadoRequest
-│   │   │   │   │   ├── MainApiApp.java    ← Punto de entrada Spring Boot
-│   │   │   │   │   └── SpringApiConfig.java ← Composition root (cableado de beans Spring)
-│   │   │   │   ├── service/
-│   │   │   │   │   ├── FormulaService.java
-│   │   │   │   │   ├── PacienteService.java
-│   │   │   │   │   ├── PedidoService.java
-│   │   │   │   │   └── AuthService.java
-│   │   │   │   ├── ui/
-│   │   │   │   │   ├── AlertHelper.java   ← Utilidad de diálogos compartida
-│   │   │   │   │   └── panels/
-│   │   │   │   │       ├── FormulasPanel.java
-│   │   │   │   │       ├── PedidosPanel.java
-│   │   │   │   │       ├── PacientesPanel.java
-│   │   │   │   │       ├── SolicitarPedidoPanel.java
-│   │   │   │   │       └── MisPedidosPanel.java
+│   │   ├── java/com/pharmacyfm/
+│   │   │   ├── api/
+│   │   │   │   ├── controller/            ← FormulasController, PedidosController, PacientesController
+│   │   │   │   ├── dto/                   ← PedidoCatalogoRequest, PedidoPersonalizadoRequest, EstadoRequest
+│   │   │   │   ├── MainApiApp.java        ← Punto de entrada Spring Boot
+│   │   │   │   └── SpringApiConfig.java   ← Composition root (cableado de beans Spring)
+│   │   │   ├── service/
+│   │   │   │   ├── FormulaService.java
+│   │   │   │   ├── PacienteService.java
+│   │   │   │   ├── PedidoService.java
+│   │   │   │   └── AuthService.java
+│   │   │   ├── ui/
+│   │   │   │   ├── AlertHelper.java       ← Utilidad de diálogos compartida
 │   │   │   │   ├── AdminWindow.java
 │   │   │   │   ├── UserWindow.java
 │   │   │   │   ├── LoginScreen.java
-│   │   │   │   ├── AppContext.java        ← Composition root JavaFX
-│   │   │   │   ├── MainApp.java           ← Punto de entrada JavaFX
-│   │   │   │   ├── Database.java
-│   │   │   │   └── DatabaseConnection.java
-│   │   │   └── com/pharmacyfm/
-│   │   │       ├── domain/
-│   │   │       │   ├── model/             ← Formula, Paciente, Pedido (records), Role, EstadoPedido (enums)
-│   │   │       │   └── port/              ← FormulaRepository, PedidoRepository, PacienteRepository, UserRepository
-│   │   │       └── infrastructure/
-│   │   │           └── persistence/       ← JdbcFormulaRepository, JdbcPedidoRepository, JdbcPacienteRepository…
+│   │   │   │   └── panels/
+│   │   │   │       ├── FormulasPanel.java
+│   │   │   │       ├── PedidosPanel.java
+│   │   │   │       ├── PacientesPanel.java
+│   │   │   │       ├── SolicitarPedidoPanel.java
+│   │   │   │       └── MisPedidosPanel.java
+│   │   │   ├── domain/
+│   │   │   │   ├── model/                 ← Formula, Paciente, Pedido (records), Role, EstadoPedido (enums)
+│   │   │   │   └── port/                  ← FormulaRepository, PedidoRepository, PacienteRepository, UserRepository
+│   │   │   ├── infrastructure/
+│   │   │   │   └── persistence/           ← JdbcFormulaRepository, JdbcPedidoRepository, JdbcPacienteRepository…
+│   │   │   ├── AppContext.java            ← Composition root JavaFX
+│   │   │   ├── MainApp.java               ← Punto de entrada JavaFX
+│   │   │   └── Database.java
 │   │   └── resources/
 │   │       ├── application.properties     ← Configuración Spring Boot
 │   │       ├── logback.xml
 │   │       └── styles.css
 │   └── test/
-│       └── java/
-│           ├── app/service/               ← FormulaServiceTest, PedidoServiceTest, PacienteServiceTest
-│           └── com/pharmacyfm/
-│               ├── domain/model/          ← FormulaTest, PedidoTest, PacienteTest, RoleTest…
-│               └── infrastructure/        ← JdbcFormulaRepositoryTest, JdbcPedidoRepositoryTest,
+│       └── java/com/pharmacyfm/
+│           ├── service/                   ← FormulaServiceTest, PedidoServiceTest, PacienteServiceTest
+│           ├── domain/model/               ← FormulaTest, PedidoTest, PacienteTest, RoleTest…
+│           └── infrastructure/            ← JdbcFormulaRepositoryTest, JdbcPedidoRepositoryTest,
 │                                              JdbcPacienteRepositoryTest, JdbcUserRepositoryTest, InMemoryDb
 ├── Procfile                               ← Despliegue en Railway
 └── pom.xml
