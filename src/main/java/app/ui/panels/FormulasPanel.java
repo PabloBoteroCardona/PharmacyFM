@@ -17,6 +17,8 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 /**
  * Panel CRUD del catálogo de fórmulas magistrales para el área de administración.
  *
@@ -61,7 +63,7 @@ public final class FormulasPanel {
         TableColumn<Formula, Double> colPrecio = new TableColumn<>("Precio");
         colPrecio.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().precio()));
 
-        table.getColumns().addAll(colNombre, colDesc, colPrecio);
+        table.getColumns().addAll(List.of(colNombre, colDesc, colPrecio));
 
         ObservableList<Formula> data = FXCollections.observableArrayList(formulaService.getAllFormulas());
         table.setItems(data);

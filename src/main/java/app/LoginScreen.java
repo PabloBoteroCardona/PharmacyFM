@@ -3,8 +3,6 @@ package app;
 import app.service.AuthService;
 import com.pharmacyfm.domain.model.Role;
 import com.pharmacyfm.domain.model.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -27,8 +25,6 @@ import java.util.Optional;
  * y la recuperación de credenciales.
  */
 public class LoginScreen {
-
-    private static final Logger log = LoggerFactory.getLogger(LoginScreen.class);
 
     // Obtenemos el servicio de la raíz de composición; nunca lo instanciamos directamente
     private static final AuthService authService = AppContext.get().authService();

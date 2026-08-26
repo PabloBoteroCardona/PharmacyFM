@@ -13,6 +13,8 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+import java.util.List;
+
 /**
  * Panel de seguimiento de pedidos para el área del paciente.
  *
@@ -64,7 +66,7 @@ public final class MisPedidosPanel {
         TableColumn<Pedido, String> colObs = new TableColumn<>("Observaciones");
         colObs.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().observaciones()));
 
-        table.getColumns().addAll(colFecha, colFormula, colCantidad, colEstado, colObs);
+        table.getColumns().addAll(List.of(colFecha, colFormula, colCantidad, colEstado, colObs));
 
         ObservableList<Pedido> data = FXCollections.observableArrayList();
         cargarPedidos(data, paciente);

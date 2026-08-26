@@ -16,6 +16,8 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 /**
  * Panel de gestión del directorio de pacientes para el área de administración.
  *
@@ -59,7 +61,7 @@ public final class PacientesPanel {
         TableColumn<Paciente, String> colTelefono = new TableColumn<>("Teléfono");
         colTelefono.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().telefono()));
 
-        table.getColumns().addAll(colNombre, colEmail, colTelefono);
+        table.getColumns().addAll(List.of(colNombre, colEmail, colTelefono));
 
         ObservableList<Paciente> data = FXCollections.observableArrayList(pacienteService.getTodosPacientes());
         table.setItems(data);

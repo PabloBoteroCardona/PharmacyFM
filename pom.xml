@@ -11,8 +11,6 @@
     <packaging>jar</packaging>
 
     <properties>
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>23</javafx.version>
         <!-- Valor por defecto vacío; JaCoCo lo sobreescribe durante prepare-agent -->
@@ -76,7 +74,6 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.5.6</version>
         </dependency>
 
         <!-- Spring Boot REST API -->

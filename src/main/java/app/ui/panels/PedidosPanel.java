@@ -16,6 +16,8 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 /**
  * Panel de gestión de pedidos para el área de administración.
  *
@@ -69,7 +71,7 @@ public final class PedidosPanel {
         TableColumn<Pedido, String> colObs = new TableColumn<>("Observaciones");
         colObs.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().observaciones()));
 
-        table.getColumns().addAll(colFecha, colPaciente, colFormula, colCant, colEstado, colObs);
+        table.getColumns().addAll(List.of(colFecha, colPaciente, colFormula, colCant, colEstado, colObs));
 
         ObservableList<Pedido> data = FXCollections.observableArrayList();
         cargarPedidos(data);
