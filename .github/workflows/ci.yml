@@ -34,3 +34,43 @@ jobs:
           name: jacoco-report
           path: target/site/jacoco/
           retention-days: 7
+
+  deploy:
+    name: Desplegar API en Cloud Run
+    needs: build
+    # Solo despliega tras un push directo a master (no en PRs ni otras ramas)
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # requerido por Workload Identity Federation
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Autenticarse en Google Cloud (Workload Identity Federation, sin claves JSON)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/37174754720/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-actions-deployer@pharmacyfm-api.iam.gserviceaccount.com
+
+      - name: Configurar gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configurar Docker para Artifact Registry
+        run: gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
+
+      - name: Construir y publicar la imagen
+        run: |
+          IMAGE="europe-west1-docker.pkg.dev/pharmacyfm-api/cloud-run-source-deploy/pharmacyfm-api:${GITHUB_SHA}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Desplegar en Cloud Run
+        run: |
+          gcloud run deploy pharmacyfm-api \
+            --image="${IMAGE}" \
+            --region=europe-west1 \
+            --quiet

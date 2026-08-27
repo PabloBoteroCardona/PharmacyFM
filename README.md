@@ -149,6 +149,8 @@ mvn test     # solo tests, sin verificación de cobertura
 GitHub Actions ejecuta `mvn verify` en cada push y pull request hacia `master`.  
 El informe de cobertura JaCoCo se publica como artefacto del workflow.
 
+Tras un push directo a `master` con los tests en verde, un segundo job construye la imagen Docker y la despliega automáticamente en **Cloud Run**. La autenticación con Google Cloud usa **Workload Identity Federation** (sin claves JSON de larga duración): una cuenta de servicio dedicada (`github-actions-deployer`) que GitHub Actions puede impersonar únicamente desde este repositorio.
+
 Configuración: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ---
