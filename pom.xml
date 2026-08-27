@@ -119,6 +119,15 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>23</release>
+                    <!--
+                        Conserva los nombres reales de los parámetros en el bytecode.
+                        Sin esto, Springdoc no puede leer el nombre de @PathVariable/@RequestParam
+                        (ej. "id") y los omite del spec de OpenAPI — Swagger UI muestra
+                        "No parameters" aunque el endpoint sí los reciba y funcione.
+                        spring-boot-starter-parent lo activa por defecto; como este proyecto
+                        solo importa el BOM (no hereda ese <parent>), hay que activarlo aquí.
+                    -->
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
 
