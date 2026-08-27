@@ -35,3 +35,7 @@ Thumbs.db
 *.log
 logs/
 
+# ---- Tooling de asistente de IA (local, no forma parte del proyecto) ----
+.claude/
+.codegraph/
+

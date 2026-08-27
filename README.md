@@ -213,6 +213,7 @@ PharmacyFM/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                         ← Pipeline CI (GitHub Actions)
+├── .gitignore
 ├── database/
 │   └── schema.sql                         ← DDL de SQLite (referencia)
 ├── docs/screenshots/                      ← Capturas de pantalla
@@ -253,12 +254,17 @@ PharmacyFM/
 │   │       ├── logback.xml
 │   │       └── styles.css
 │   └── test/
-│       └── java/com/pharmacyfm/
-│           ├── service/                   ← FormulaServiceTest, PedidoServiceTest, PacienteServiceTest
-│           ├── domain/model/               ← FormulaTest, PedidoTest, PacienteTest, RoleTest…
-│           └── infrastructure/            ← JdbcFormulaRepositoryTest, JdbcPedidoRepositoryTest,
-│                                              JdbcPacienteRepositoryTest, JdbcUserRepositoryTest, InMemoryDb
-├── Procfile                               ← Despliegue en Railway
+│       ├── java/com/pharmacyfm/
+│       │   ├── service/                   ← FormulaServiceTest, PedidoServiceTest, PacienteServiceTest
+│       │   ├── domain/model/               ← FormulaTest, PedidoTest, PacienteTest, RoleTest…
+│       │   └── infrastructure/            ← JdbcFormulaRepositoryTest, JdbcPedidoRepositoryTest,
+│       │                                      JdbcPacienteRepositoryTest, JdbcUserRepositoryTest, InMemoryDb
+│       └── resources/
+│           └── mockito-extensions/
+│               └── org.mockito.plugins.MockMaker  ← Habilita el mock inline de Mockito 5 en Java 23
+├── CLAUDE.md                               ← Directrices de desarrollo del proyecto
+├── Dockerfile                              ← Build multi-etapa (Maven → JRE) para la API REST
+├── Procfile                                ← Despliegue en Railway
 └── pom.xml
 ```
 
