@@ -22,5 +22,4 @@
 ## 3. Estilo y Convenciones de Git
 - **Commits atómicos (Conventional Commits):** `feat:`, `refactor:`, `fix:`, `test:`, `ci:`.
 - **Regla de Oro:** Antes de cada commit, `mvn test` debe compilar y pasar en verde.
-- Todos los mensajes de commit deben redactarse en español.
 - Usar el estándar Conventional Commits: `refactor(build): migrar a layout estándar de Maven`.
